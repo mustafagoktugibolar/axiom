@@ -141,7 +141,7 @@ public sealed class SchemaVersioningRule : BuiltInRule
             Parts = parts;
         }
 
-        public static IComparer<VersionId> Order { get; } = Comparer<VersionId>.Create(Compare);
+        public static Comparer<VersionId> Order { get; } = Comparer<VersionId>.Create(Compare);
 
         public string Directory { get; }
 
