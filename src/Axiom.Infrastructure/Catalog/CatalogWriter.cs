@@ -178,7 +178,7 @@ public sealed class CatalogWriter(AxiomDbContext db, IEventOutbox outbox, TimePr
         {
             var provenance = entity.Provenance;
             var technologies = entity.Technologies.IsDefault ? [] : entity.Technologies.ToArray();
-            var attributes = CatalogMapping.SerializeAttributes(entity.Attributes ?? []);
+            var attributes = CatalogMapping.SerializeAttributes(entity.Attributes ?? System.Collections.Immutable.ImmutableSortedDictionary<string, string>.Empty);
             var lastSeen = CatalogMapping.Normalize(provenance.LastSeen);
             if (mine.TryGetValue(key, out var row))
             {
