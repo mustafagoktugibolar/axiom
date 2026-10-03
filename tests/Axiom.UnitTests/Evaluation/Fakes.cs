@@ -55,7 +55,13 @@ internal sealed class FakeGraph : ISystemGraph
     public Task<EntityRef?> ResolveRepositoryAsync(string organizationId, string repository, CancellationToken cancellationToken) =>
         Task.FromResult(_topologies.Keys.Where(k => k.IsDesignatedBy(repository)).Select(k => (EntityRef?)k).FirstOrDefault());
 
-    public Task<SoftwareEntity?> FindAsync(string organizationId, EntityRef entity, CancellationToken cancellationToken) => Task.FromResult<SoftwareEntity?>(null);
+    public HashSet<EntityRef> Known { get; } = [];
+
+    public Task<SoftwareEntity?> FindAsync(string organizationId, EntityRef entity, CancellationToken cancellationToken) =>
+        Task.FromResult(Known.Contains(entity)
+            ? new SoftwareEntity(entity, entity.Name, null, [], ImmutableSortedDictionary<string, string>.Empty,
+                EntityProvenance.Declared(ProvenanceSource.Manual, "test", DateTimeOffset.UnixEpoch))
+            : null);
 
     public Task<RepositoryTopology> GetRepositoryTopologyAsync(string organizationId, EntityRef repository, CancellationToken cancellationToken) =>
         Task.FromResult(_topologies[repository]);

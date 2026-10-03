@@ -70,29 +70,18 @@ public sealed class ChangeScopeResolver(ISystemGraph graph)
         var topology = await graph.GetRepositoryTopologyAsync(request.OrganizationId, repository.Value, cancellationToken);
         scope = scope.WithEntities(ScopeDimension.Repository, [repository.Value]);
 
-        // A level is known only when the graph binds it; otherwise it stays undetermined.
-        if (!topology.Components.IsEmpty)
+        // A dimension is known only when the graph actually declares it. An undeclared level, capability,
+        // API, resource or technology is undetermined, not empty: the catalog being incomplete must
+        // never remove governance.
+        scope = WithDeclared(scope, ScopeDimension.Component, topology.Components);
+        scope = WithDeclared(scope, ScopeDimension.System, topology.Systems);
+        scope = WithDeclared(scope, ScopeDimension.Domain, topology.Domains);
+        scope = WithDeclared(scope, ScopeDimension.Capability, topology.Capabilities);
+        scope = WithDeclared(scope, ScopeDimension.Api, topology.Apis);
+        scope = WithDeclared(scope, ScopeDimension.Resource, topology.Resources);
+        if (!topology.Technologies.IsEmpty)
         {
-            scope = scope
-                .WithEntities(ScopeDimension.Component, topology.Components)
-                .WithEntities(ScopeDimension.Capability, topology.Capabilities)
-                .WithEntities(ScopeDimension.Api, topology.Apis)
-                .WithEntities(ScopeDimension.Resource, topology.Resources);
-
-            if (!topology.Systems.IsEmpty)
-            {
-                scope = scope.WithEntities(ScopeDimension.System, topology.Systems);
-            }
-
-            if (!topology.Domains.IsEmpty)
-            {
-                scope = scope.WithEntities(ScopeDimension.Domain, topology.Domains);
-            }
-
-            if (!topology.Technologies.IsEmpty)
-            {
-                scope = scope.With(ScopeDimension.Technology, topology.Technologies);
-            }
+            scope = scope.With(ScopeDimension.Technology, topology.Technologies);
         }
 
         var findings = topology.Gaps
@@ -110,6 +99,9 @@ public sealed class ChangeScopeResolver(ISystemGraph graph)
         activity?.SetTag("axiom.repository.bound", true);
         return new ChangeContext(scope, repository, repository.Value.ToString(), topology, topology.Gaps, findings, catalogVersion);
     }
+
+    private static EvaluationScope WithDeclared(EvaluationScope scope, ScopeDimension dimension, ImmutableArray<EntityRef> entities) =>
+        entities.IsEmpty ? scope : scope.WithEntities(dimension, entities);
 
     private static string RepositoryDisplayName(string repository)
     {
