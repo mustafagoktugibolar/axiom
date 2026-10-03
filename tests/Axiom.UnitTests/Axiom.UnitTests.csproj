@@ -18,6 +18,10 @@
     <ProjectReference Include="../../src/Axiom.Infrastructure/Axiom.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="../../axiom-engineering-governance-plane/examples/governance/**/*" LinkBase="SpecExamples" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../governance/**/*" Exclude="../../governance/schemas/**" LinkBase="AxiomGovernance" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 </Project>

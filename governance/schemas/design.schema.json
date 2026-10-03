@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axiom.example/schemas/design.schema.json",
+  "title": "Axiom Significant Change Design",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "goal",
+    "nonGoals",
+    "affectedSystems",
+    "currentBehavior",
+    "proposedBehavior",
+    "decisionsConsulted",
+    "failureModes",
+    "observability",
+    "rollout"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "nonGoals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "affectedSystems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "affectedRepositories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "currentBehavior": {
+      "type": "string"
+    },
+    "proposedBehavior": {
+      "type": "string"
+    },
+    "decisionsConsulted": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "newDecisionCandidates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contracts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "failureModes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "security": {
+      "type": "object"
+    },
+    "observability": {
+      "type": "object"
+    },
+    "migration": {
+      "type": "object"
+    },
+    "rollout": {
+      "type": "object"
+    }
+  }
+}

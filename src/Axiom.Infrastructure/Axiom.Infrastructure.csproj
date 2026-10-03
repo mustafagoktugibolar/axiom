@@ -18,4 +18,9 @@
     <PackageReference Include="Npgsql.OpenTelemetry" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- The published schemas in governance/schemas are the single source; they are embedded, not copied. -->
+    <EmbeddedResource Include="../../governance/schemas/*.schema.json" LogicalName="Axiom.Schemas.%(Filename)%(Extension)" />
+    <InternalsVisibleTo Include="Axiom.UnitTests" />
+  </ItemGroup>
 </Project>
