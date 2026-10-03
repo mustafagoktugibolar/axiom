@@ -24,7 +24,7 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
     {
         ArgumentNullException.ThrowIfNull(config);
         var credential = await ResolveCredentialAsync(config, cancellationToken);
-        return await RunAsync(config, cancellationToken, mirror =>
+        return await RunAsync(config, mirror =>
         {
             Fetch(mirror, config, credential);
             using var repository = new Repository(mirror);
@@ -32,11 +32,11 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
                 ?? throw new InvalidOperationException($"Branch '{config.Branch}' does not exist in the governance repository of organization '{config.OrganizationId}'.");
             var tip = reference.Target.Peel<Commit>();
             return ToSourceCommit(tip);
-        });
+        }, cancellationToken);
     }
 
     public Task<IReadOnlyList<SourceFile>> ReadTreeAsync(GovernanceSourceConfig config, string commitSha, CancellationToken cancellationToken) =>
-        ReadAsync<IReadOnlyList<SourceFile>>(config, commitSha, cancellationToken, (_, commit) =>
+        ReadAsync<IReadOnlyList<SourceFile>>(config, commitSha, (_, commit) =>
         {
             var root = Root(config);
             var files = new List<SourceFile>();
@@ -65,13 +65,13 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
 
             files.Sort((left, right) => string.CompareOrdinal(left.Path, right.Path));
             return files;
-        });
+        }, cancellationToken);
 
     public Task<IReadOnlyList<SourceFileVersion>> ReadHistoryAsync(GovernanceSourceConfig config, string commitSha, string path, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(path);
         var normalized = GlobPattern.NormalizePath(path);
-        return ReadAsync<IReadOnlyList<SourceFileVersion>>(config, commitSha, cancellationToken, (_, commit) =>
+        return ReadAsync<IReadOnlyList<SourceFileVersion>>(config, commitSha, (_, commit) =>
         {
             var versions = new List<SourceFileVersion>();
             if (!IsUnderRoot(normalized, Root(config)))
@@ -93,11 +93,11 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
             }
 
             return versions;
-        });
+        }, cancellationToken);
     }
 
     public Task<IReadOnlyList<string>?> ChangedPathsAsync(GovernanceSourceConfig config, string fromSha, string toSha, CancellationToken cancellationToken) =>
-        ReadAsync<IReadOnlyList<string>?>(config, toSha, cancellationToken, (repository, target) =>
+        ReadAsync<IReadOnlyList<string>?>(config, toSha, (repository, target) =>
         {
             var origin = repository.Lookup<Commit>(fromSha);
             if (origin is null)
@@ -120,10 +120,10 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
                 .Distinct(StringComparer.Ordinal)
                 .Order(StringComparer.Ordinal)
                 .ToList();
-        });
+        }, cancellationToken);
 
     public Task<IReadOnlyList<SourceCommit>?> ListFirstParentCommitsAsync(GovernanceSourceConfig config, string? afterSha, string headSha, CancellationToken cancellationToken) =>
-        ReadAsync<IReadOnlyList<SourceCommit>?>(config, headSha, cancellationToken, (_, head) =>
+        ReadAsync<IReadOnlyList<SourceCommit>?>(config, headSha, (_, head) =>
         {
             var chain = new List<SourceCommit>();
             var found = afterSha is null;
@@ -145,12 +145,12 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
 
             chain.Reverse();
             return chain;
-        });
+        }, cancellationToken);
 
     public Task<IReadOnlyList<SourceFile>> ReadFilesAsync(GovernanceSourceConfig config, string commitSha, IReadOnlyCollection<string> paths, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(paths);
-        return ReadAsync<IReadOnlyList<SourceFile>>(config, commitSha, cancellationToken, (_, commit) =>
+        return ReadAsync<IReadOnlyList<SourceFile>>(config, commitSha, (_, commit) =>
         {
             var root = Root(config);
             var files = new List<SourceFile>();
@@ -163,7 +163,7 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
             }
 
             return files;
-        });
+        }, cancellationToken);
     }
 
     private static IEnumerable<Commit> FirstParentChain(Commit head)
@@ -265,12 +265,12 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
     }
 
     /// <summary>Runs a read against the mirror, fetching once when the mirror does not have the commit yet.</summary>
-    private async Task<T> ReadAsync<T>(GovernanceSourceConfig config, string commitSha, CancellationToken cancellationToken, Func<Repository, Commit, T> read)
+    private async Task<T> ReadAsync<T>(GovernanceSourceConfig config, string commitSha, Func<Repository, Commit, T> read, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentException.ThrowIfNullOrWhiteSpace(commitSha);
         var credential = await ResolveCredentialAsync(config, cancellationToken);
-        return await RunAsync(config, cancellationToken, mirror =>
+        return await RunAsync(config, mirror =>
         {
             if (!Repository.IsValid(mirror) || !HasCommit(mirror, commitSha))
             {
@@ -281,7 +281,7 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
             var commit = repository.Lookup<Commit>(commitSha)
                 ?? throw new InvalidOperationException($"Commit '{commitSha}' does not exist in the governance repository of organization '{config.OrganizationId}'.");
             return read(repository, commit);
-        });
+        }, cancellationToken);
     }
 
     private static bool HasCommit(string mirror, string commitSha)
@@ -290,7 +290,7 @@ public sealed class GitGovernanceSource(IOptionsMonitor<GovernanceOptions> optio
         return repository.Lookup<Commit>(commitSha) is not null;
     }
 
-    private async Task<T> RunAsync<T>(GovernanceSourceConfig config, CancellationToken cancellationToken, Func<string, T> work)
+    private async Task<T> RunAsync<T>(GovernanceSourceConfig config, Func<string, T> work, CancellationToken cancellationToken)
     {
         var mirror = MirrorPath(config);
         var gate = Gates.GetOrAdd(mirror, _ => new SemaphoreSlim(1, 1));
