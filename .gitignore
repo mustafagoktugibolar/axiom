@@ -55,3 +55,14 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Local / OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.user
+
+# Node / portal
+node_modules/
+dist/
+*.tsbuildinfo

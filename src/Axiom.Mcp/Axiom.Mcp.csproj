@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../Axiom.Application/Axiom.Application.csproj" />
+    <PackageReference Include="ModelContextProtocol" />
+  </ItemGroup>
+</Project>

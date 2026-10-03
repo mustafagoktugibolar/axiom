@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>axiom-cli</AssemblyName>
+    <RootNamespace>Axiom.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>axiom-cli</ToolCommandName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Axiom.Application\Axiom.Application.csproj" />
+    <ProjectReference Include="..\..\src\Axiom.Infrastructure\Axiom.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+</Project>

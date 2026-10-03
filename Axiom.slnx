@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Axiom.Api/Axiom.Api.csproj" />
+    <Project Path="src/Axiom.Application/Axiom.Application.csproj" />
+    <Project Path="src/Axiom.Domain/Axiom.Domain.csproj" />
+    <Project Path="src/Axiom.Infrastructure/Axiom.Infrastructure.csproj" />
+    <Project Path="src/Axiom.Mcp/Axiom.Mcp.csproj" />
+    <Project Path="src/Axiom.PolicyRunner/Axiom.PolicyRunner.csproj" />
+    <Project Path="src/Axiom.Workers/Axiom.Workers.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Axiom.ArchitectureTests/Axiom.ArchitectureTests.csproj" />
+    <Project Path="tests/Axiom.ContractTests/Axiom.ContractTests.csproj" />
+    <Project Path="tests/Axiom.E2E/Axiom.E2E.csproj" />
+    <Project Path="tests/Axiom.IntegrationTests/Axiom.IntegrationTests.csproj" />
+    <Project Path="tests/Axiom.UnitTests/Axiom.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/" />
+  <Folder Name="/tools/axiom-cli/">
+    <Project Path="tools/axiom-cli/Axiom.Cli.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1707;CA1861</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Axiom.Domain/Axiom.Domain.csproj" />
+    <ProjectReference Include="../../src/Axiom.Application/Axiom.Application.csproj" />
+    <ProjectReference Include="../../src/Axiom.Infrastructure/Axiom.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Axiom.Api/Axiom.Api.csproj" />
+    <ProjectReference Include="../../src/Axiom.Mcp/Axiom.Mcp.csproj" />
+    <ProjectReference Include="../../src/Axiom.Workers/Axiom.Workers.csproj" />
+    <ProjectReference Include="../../src/Axiom.PolicyRunner/Axiom.PolicyRunner.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>
