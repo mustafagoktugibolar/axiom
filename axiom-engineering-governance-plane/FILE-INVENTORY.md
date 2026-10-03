@@ -1,0 +1,61 @@
+# File Inventory
+
+Total files: 55
+
+| File | SHA-256 |
+|---|---|
+| `.kiro/specs/axiom/design.md` | `9dcaf2b2253f3eeefa1eef4d13da90fd68b11a2abbe1211fb7ee138406bf9e88` |
+| `.kiro/specs/axiom/requirements.md` | `891d8881bae00df952c8e31964ca1faf0166dc8c43e59aff279d9d9ffd42a0c4` |
+| `.kiro/specs/axiom/tasks.md` | `df9dd2842e524e140a77b32342b284591211f192fc22c779d20c30b0ffc0c270` |
+| `.kiro/steering/product.md` | `98af1c2a252cd88c83d014bf0444a7002e750ebad79f59d9f3aa9b730742cf45` |
+| `.kiro/steering/structure.md` | `7bf2791afe0734bde632bd09aef47c6b4eaef642e0d6204a0b3556ede5c8bb2a` |
+| `.kiro/steering/tech.md` | `3c4cedfaf580986729df79fa1c88911ee26477e73fd96cf05489560503e6738f` |
+| `MANIFEST.md` | `f9730fd97b873b5b438da399c095722769734426685047f52cf0bae706a2ae40` |
+| `README.md` | `9819def9614beffd88b67e23d13bf59f94593264a9c06ff2b2090246e891940b` |
+| `docs/01-product/glossary.md` | `2bb5aa4cf8fe4b94ba201cdd86fd4e53889d7f24874baf354067191aa7874c26` |
+| `docs/01-product/personas-and-use-cases.md` | `4f38f67570a906122b35c6eaf9e13e04e96aa495fb17ca42fb18a6b8c964de6e` |
+| `docs/01-product/prd.md` | `cd0ad040be8de6592956a5f1c4cba26b2fbc59b2eabf14c5ed9d26b2e5efda92` |
+| `docs/01-product/vision-and-strategy.md` | `74629dd07fb8f69c49ec29a4a138f50e808e896db85e7522e6cdbe4a31770d7a` |
+| `docs/02-architecture/architecture-at-a-glance.md` | `e3235b79a0d9295ca4ec9e0599d8e6d4db6a8de8a5234f7e94e6a94cd1f06d8d` |
+| `docs/02-architecture/context-and-containers.md` | `fd89f81a0e2ab18bf262daa87170b9f7fe01c19d42ebe1e0a2f6bd136e309e4b` |
+| `docs/02-architecture/decision-resolution-engine.md` | `ec4d9ce8e1e74b8de86ac841013e10d7dbc7ef0c066ebee65fd82aa986e929fa` |
+| `docs/02-architecture/deployment-and-scalability.md` | `db5b98cefb2697e6cb4404ee9f9d174f8e0e7da62fe2e61fc674a31392a2a750` |
+| `docs/02-architecture/domain-model.md` | `4a4fe83b989ed1b700bff1ab5e53d06ff13a2cf3b9d9cdf511cab4131aec29c2` |
+| `docs/02-architecture/integration-and-adapters.md` | `9f48764deace59d300631a7df1c76974a2a1d99ca130a249e0aae29fccea06c4` |
+| `docs/02-architecture/observability-and-slo.md` | `d080849b32bae0493584aca6ff8a58a8005436532c6aa80af6d5e3befc7e41d6` |
+| `docs/02-architecture/security-threat-model.md` | `79abdb14a36c8e870f74866726b58396c383d8f03d6f2548654c83902b1a285f` |
+| `docs/02-architecture/system-graph.md` | `974d4024ca9f0d078755a8e24ac903d72f585ad1e9d221a2d5157c0422a17aaa` |
+| `docs/03-governance/decision-lifecycle.md` | `3e75291bc64c229a36dd4b51201e627fce76ba6eb38c18dc630124bb4ce1f723` |
+| `docs/03-governance/enforcement-model.md` | `a4e8160964af461504fbc83abbb297cb1ef33366c1192a231b70359a6769b830` |
+| `docs/03-governance/exception-model.md` | `5eb1e0826683b280026cb4cb845ffb0d0bece1b7f83cac6355949f1ca70e4d14` |
+| `docs/03-governance/ownership-review.md` | `105f5086e034d5159429aea3a2dcca741de918bfb4aabf1f02ab5facc70836bc` |
+| `docs/04-contracts/event-contracts.md` | `449ba9976b4b739db11e7dcf40ef4b5481860f8070d0852a8863a770a3ccd99f` |
+| `docs/04-contracts/mcp-contract.md` | `3b93fbfe15a3e43a486423d625c1871fdd4c2831e4075fbf1cb006978906c3e7` |
+| `docs/04-contracts/rest-api.yaml` | `bae5de5a4e04b08f9789d91f7338e3eee91a04142e48fd140f7fc5cc94d66863` |
+| `docs/05-workflows/drift-and-learning-loop.md` | `d3104c08668766cd0dd08adcfd55aa9f6972793a55a6800844df4eaf08c5b35d` |
+| `docs/05-workflows/knowledge-onboarding.md` | `8b30afb940140709feeb4d419364c9a739151c8cf6ad3a5e4235114a9db0d0d9` |
+| `docs/05-workflows/preflight-to-merge.md` | `1c4d9ddbb2b7d7593b7f97b622705492e32e5dd4dc45eb395b98480cabf0b4ea` |
+| `docs/06-delivery/adoption-plan.md` | `28054f7b9acb3ee3c94230343b93b8704dd080af46f2cdc1f90a356beb36c84c` |
+| `docs/06-delivery/backlog.md` | `d708aac9e420112ab0dd5bd3bea4c217d011eafdef07e642719175694ddf5ded` |
+| `docs/06-delivery/implementation-roadmap.md` | `3940e4ba6b9f947a0cb0466a3f280a50e5f3763ef99c958d4aa9fc441bd06712` |
+| `docs/06-delivery/test-strategy.md` | `dd0341447c376bcae573afef8e9e2b6187fee2bdc70b17c75d64687f48215e86` |
+| `docs/07-decisions/ADR-0001-git-is-authoritative.md` | `ae7444d5291a48650f96d44f84303567f911f352cec91f648fbc14e75a7206d0` |
+| `docs/07-decisions/ADR-0002-deterministic-before-semantic.md` | `1f50f32186db7150bdcd2c4e420d2b1d1bea52c8f0b9bd83ac1925c957e18a4e` |
+| `docs/07-decisions/ADR-0003-mcp-is-agent-contract.md` | `3c9131150f85b7530cb12816ff201b3d3430e4da49c8d3f0e8e532aff58153eb` |
+| `docs/07-decisions/ADR-0004-system-graph-relational-first.md` | `dc07d8f3071a56f44d37e447b0d256dabb6b25f4c7e3f09a340058393fffedf4` |
+| `docs/07-decisions/ADR-0005-semantic-findings-do-not-block-by-default.md` | `b1ea7f7d66d936e1613ec08694945577a805f0f1eff8f43642b13eb2f66cfb3f` |
+| `docs/07-decisions/ADR-0006-exceptions-are-scoped-and-expiring.md` | `f047febeba40dec3ea813af350e3c219b5a77f4287be8e4254c0ca05209beca8` |
+| `docs/07-decisions/ADR-0007-ci-is-final-enforcement-boundary.md` | `c72421103415c658931dfab540957cbed922e0d0171118ddff20bf4ed1091a2b` |
+| `examples/README.md` | `475567e323d1107884a5f2d7ebe53c8bd919ad8a3b313fc933f4b2eeea400a8b` |
+| `examples/governance/decisions/ARCH-042-gateway-routing.md` | `461561d800bf6916b469f44d11a38891c5e33905a4f8dbf3a83691d446a7df26` |
+| `examples/governance/designs/DESIGN-101-homepage-routing.md` | `0f5a354c8d5c2ece586d1e607c9b63f9bb16dfa626fb47cc44fb36c2e5792e2c` |
+| `examples/governance/exceptions/EXC-023-legacy-homepage.yaml` | `062489cf1e31f3ab112bdec60d7557c8efc557d820c83e61d0a7946628632489` |
+| `examples/repository/.kiro/hooks/governance-diff-check.json` | `8c30a486cd38877b404c165903453a86f43ee4e8ed4cad0759b73413e13d31c1` |
+| `examples/repository/.kiro/hooks/governance-preflight.json` | `1c6e180936c31e56a8f444b7e5d5fc218afbb1c24db796604120a3825e715abd` |
+| `examples/repository/AGENTS.md` | `fc5d7a8b44b28d95bdcc4d71578538ceebaae055eb760ca7fd2002a57056d41f` |
+| `examples/repository/azure-pipelines-governance.yml` | `94a6b06f8e99651f18aef33646c09450d2d8f575c1db9717ebac272ee3671019` |
+| `examples/repository/mcp-config.example.json` | `fb1479634752fc5f8e6f1c03327fb227a24e3f056f22c74ac5b21ec52e7751e3` |
+| `references/research-sources.md` | `be5f7988558a9fb7cb67112bc94d8d2b8e0a972d1989e4ded4689ae7372614de` |
+| `schemas/decision.schema.json` | `7a42a811d1dd347d363db6699bb4df0cf4054497077326e538ec3d9b6026ebac` |
+| `schemas/design.schema.json` | `861657b8bb8be809335615697c9d7333bfb0b8d0f8261b56d0eebb2e60df6e3b` |
+| `schemas/exception.schema.json` | `b775926f7e95e0dd40fd3cf2ae4f79db7b3c415baec12702334a3131fc36e39f` |

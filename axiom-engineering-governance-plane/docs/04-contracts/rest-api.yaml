@@ -1,0 +1,202 @@
+openapi: 3.1.0
+info:
+  title: Axiom Engineering Governance API
+  version: 1.0.0
+  description: >
+    Vendor-neutral API for governance preflight, design validation,
+    diff validation, impact analysis, decisions, exceptions, and receipts.
+servers:
+  - url: https://axiom.example.com
+security:
+  - oauth2: [axiom.read]
+paths:
+  /v1/evaluations/preflight:
+    post:
+      operationId: preflightChange
+      security:
+        - oauth2: [axiom.evaluate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreflightRequest'
+      responses:
+        '200':
+          description: Preflight result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResult'
+  /v1/evaluations/design:
+    post:
+      operationId: validateDesign
+      security:
+        - oauth2: [axiom.evaluate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [repository, ref, design]
+              properties:
+                preflightEvaluationId: { type: string }
+                repository: { type: string }
+                ref: { type: string }
+                design: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Design evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResult'
+  /v1/evaluations/diff:
+    post:
+      operationId: validateDiff
+      security:
+        - oauth2: [axiom.evaluate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [repository, baseSha, headSha]
+              properties:
+                repository: { type: string }
+                baseSha: { type: string }
+                headSha: { type: string }
+                designEvaluationId: { type: string }
+      responses:
+        '200':
+          description: Diff evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResult'
+  /v1/impact:
+    post:
+      operationId: impactAnalysis
+      security:
+        - oauth2: [axiom.read]
+      responses:
+        '200':
+          description: Impact graph result
+  /v1/governance:
+    get:
+      operationId: searchGovernance
+      security:
+        - oauth2: [axiom.read]
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: repository
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+      responses:
+        '200':
+          description: Governance search results
+  /v1/governance/{id}:
+    get:
+      operationId: getGovernanceRecord
+      security:
+        - oauth2: [axiom.read]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Governance record
+  /v1/exceptions/requests:
+    post:
+      operationId: requestException
+      security:
+        - oauth2: [axiom.exception.request]
+      responses:
+        '202':
+          description: Exception request created
+  /v1/receipts/{id}:
+    get:
+      operationId: getReceipt
+      security:
+        - oauth2: [axiom.audit.read]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Evaluation receipt
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://identity.example.com/oauth2/token
+          scopes:
+            axiom.read: Read governance
+            axiom.evaluate: Run evaluations
+            axiom.exception.request: Request exceptions
+            axiom.audit.read: Read audit receipts
+  schemas:
+    Verdict:
+      type: string
+      enum: [ALLOW, ALLOW_WITH_WARNINGS, REQUIRE_REVIEW, BLOCK]
+    PreflightRequest:
+      type: object
+      required: [organization, repository, ref, task]
+      properties:
+        organization: { type: string }
+        repository: { type: string }
+        ref: { type: string }
+        task: { type: string }
+        paths:
+          type: array
+          items: { type: string }
+        harness:
+          type: object
+          properties:
+            type: { type: string }
+            sessionId: { type: string }
+    Finding:
+      type: object
+      required: [code, severity, message]
+      properties:
+        code: { type: string }
+        severity:
+          $ref: '#/components/schemas/Verdict'
+        message: { type: string }
+        governanceIds:
+          type: array
+          items: { type: string }
+        evidence:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    EvaluationResult:
+      type: object
+      required: [evaluationId, snapshotId, verdict]
+      properties:
+        evaluationId: { type: string }
+        snapshotId: { type: string }
+        verdict:
+          $ref: '#/components/schemas/Verdict'
+        significantChange: { type: boolean }
+        requiredActions:
+          type: array
+          items: { type: string }
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'

@@ -1,0 +1,21 @@
+schemaVersion: axiom.io/v1
+kind: Exception
+metadata:
+  id: EXC-023
+  title: Temporary legacy gateway homepage routing
+  owners: [gui-platform]
+spec:
+  status: accepted
+  targets: [ARCH-042]
+  scope:
+    repositories: [gateway]
+    paths:
+      - src/Legacy/Homepage/**
+  rationale: Temporary compatibility while clients migrate to Homepage Service.
+  startsAt: 2026-10-01T00:00:00Z
+  expiresAt: 2027-01-01T00:00:00Z
+  approvers: [platform-architecture]
+  trackingIssue: GUI-912
+  compensatingControls:
+    - No new callers may use the legacy path.
+    - Usage must be measured and decrease during migration.

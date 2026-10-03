@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "axiom-governance": {
+      "url": "https://axiom.example.com/mcp",
+      "transport": "streamable-http",
+      "authentication": "oauth"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "axiom-preflight",
+      "description": "Require governance preflight before implementation planning.",
+      "trigger": "PromptSubmit",
+      "action": {
+        "type": "agent",
+        "prompt": "Before making or planning a non-trivial repository change, call the Axiom MCP tool governance.preflight_change with this task and repository context. Obey BLOCK. Surface REQUIRE_REVIEW. If significantChange=true, create/validate a design before editing."
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "axiom-post-task-check",
+      "description": "Validate the actual change after a spec task.",
+      "trigger": "PostTaskExecution",
+      "action": {
+        "type": "agent",
+        "prompt": "Call governance.validate_diff for the actual repository changes. If the diff expands scope beyond the approved design, do not treat the previous approval as sufficient."
+      }
+    }
+  ]
+}

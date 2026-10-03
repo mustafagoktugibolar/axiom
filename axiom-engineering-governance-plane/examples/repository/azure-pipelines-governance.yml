@@ -1,0 +1,14 @@
+steps:
+  - checkout: self
+    fetchDepth: 0
+
+  - script: |
+      axiom-cli diff validate \
+        --repository "$(Build.Repository.Name)" \
+        --base "$(System.PullRequest.TargetCommitId)" \
+        --head "$(Build.SourceVersion)" \
+        --format azure-devops
+    displayName: "Axiom governance gate"
+    env:
+      AXIOM_URL: $(AXIOM_URL)
+      AXIOM_TOKEN: $(AXIOM_TOKEN)
