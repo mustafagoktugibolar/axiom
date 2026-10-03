@@ -66,3 +66,6 @@ nunit-*.xml
 node_modules/
 dist/
 *.tsbuildinfo
+
+# Local agent worktrees
+.claude/
