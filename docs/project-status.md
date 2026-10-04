@@ -75,29 +75,23 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Phase 4: preflight, evaluation pipeline, receipts (hash chain), evaluation store | done (4.8 cache = deterministic evaluation IDs; 4.9 metrics defined) | unit + 1 Postgres test |
 | Phase 6: design parser, gate, classifier, review workflow | done except 6.7 depth checks via graph | unit tests |
 | API host: JWT auth, RBAC, tenant check, error mapping, rate limit, health, evaluation/review/receipt endpoints | built, no HTTP-level tests yet | build only |
-| Governance registry infra (1.6-1.12) | IN PROGRESS in worktree branch `worktree-agent-a86338adfb3f46595` | WIP commit, unverified |
-| System graph (Phase 2) | IN PROGRESS in `worktree-agent-a375b0cb95b66e772` | WIP commit, unit tests written, integration tests unverified |
-| Policy engine (5.1-5.6, 5.9) | IN PROGRESS in `worktree-agent-a17c39f652c9fb8ee` | rules done, `Axiom.Application/Policy` engine unverified |
+| Governance registry infra (1.6-1.12) | done, merged | 23 Postgres integration tests (sync, rebuild, search, Git source) |
+| System graph (Phase 2) | done, merged | unit tests + 8 Postgres integration tests |
+| Policy engine (5.1-5.6, 5.9) | done, merged (rule coverage is representative, not exhaustive per rule) | 25 unit tests: rules, P3 order-independence, P9 errors never pass, waivers |
+| Host composition | Api and Workers register application, infrastructure, governance, catalog, policy | 2 composition integration tests (WebApplicationFactory + /health/ready) |
 | Everything else (diff/PR, MCP, CLI, semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
 
 ## How to resume (new terminal session)
 
-1. `git pull` is not needed; work is in `/Users/goktugibolar/dev/axiom`. Subagent branches live in
-   `.claude/worktrees/*` (git-ignored); each branch is based on commit `9b3cec2`.
-2. For each of the three branches: review its diff against `main`, finish its remaining verification
-   (see the original brief in Phase list above), then `git merge` it into `main`. Expect conflicts in
-   `Directory.Packages.props` and `src/Axiom.Infrastructure/Persistence/Migrations/*`: regenerate
-   migrations after merging (delete the per-branch migrations and run
-   `dotnet ef migrations add Initial` from `src/Axiom.Infrastructure`; the DB is not deployed yet).
-3. After merging: wire `AddGovernanceInfrastructure`, `AddCatalogInfrastructure`, `AddPolicyEngine`
-   into `Axiom.Api/Program.cs` and `Axiom.Workers/Program.cs`.
-4. Next slices in order: diff/PR evaluation (Phase 8) -> MCP server (Phase 9) -> CLI -> exceptions
+1. Work is in `/Users/goktugibolar/dev/axiom` on `main`. The three subagent branches are merged; their
+   worktrees under `.claude/worktrees/*` and `worktree-agent-*` branches can be removed.
+2. Migrations are a single `Initial` (the DB is not deployed). After changing a persistence model run
+   `dotnet ef migrations add <Name> -o Persistence/Migrations` from `src/Axiom.Infrastructure`, or, while
+   still undeployed, delete the migrations and regenerate `Initial`.
+3. Next slices in order: diff/PR evaluation (Phase 8) -> MCP server (Phase 9) -> CLI -> exceptions
    workflow -> semantic analyzer (Phase 7) -> onboarding (Phase 11) -> portal (Phase 10) ->
    deploy/CI -> hardening (Phase 12).
-5. Verify with `dotnet build Axiom.slnx && dotnet test Axiom.slnx` (Docker needed for Postgres tests).
-
-Usage-limit note: subagents were interrupted twice by the session limit; their WIP is committed
-on their branches and marked unverified.
+4. Verify with `dotnet build Axiom.slnx && dotnet test Axiom.slnx` (Docker needed for Postgres tests).
 
 ## Decisions requiring human input
 

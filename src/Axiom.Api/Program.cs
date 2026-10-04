@@ -4,7 +4,10 @@ using Axiom.Api;
 using Axiom.Api.Endpoints;
 using Axiom.Api.Security;
 using Axiom.Application;
+using Axiom.Application.Policy;
 using Axiom.Infrastructure;
+using Axiom.Infrastructure.Catalog;
+using Axiom.Infrastructure.Governance;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using OpenTelemetry.Trace;
 
@@ -19,6 +22,9 @@ builder.WebHost.ConfigureKestrel(kestrel =>
 
 builder.Services.AddAxiomApplication();
 builder.Services.AddAxiomInfrastructure(builder.Configuration, "axiom-api");
+builder.Services.AddGovernanceInfrastructure(builder.Configuration);
+builder.Services.AddCatalogInfrastructure(builder.Configuration);
+builder.Services.AddPolicyEngine();
 builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation());
 builder.Services.AddAxiomAuthentication(builder.Configuration, builder.Environment);
 
