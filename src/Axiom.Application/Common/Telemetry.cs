@@ -24,6 +24,7 @@ public static class AxiomTelemetry
     public static readonly Counter<long> SemanticOverturns = Meter.CreateCounter<long>("axiom.semantic.overturns", description: "Semantic findings overturned by a reviewer.");
     public static readonly Counter<long> SemanticTokens = Meter.CreateCounter<long>("axiom.semantic.tokens", description: "Model tokens consumed.");
     public static readonly Counter<long> ReceiptFailures = Meter.CreateCounter<long>("axiom.receipt.failures", description: "Receipt generation failures.");
+    public static readonly Counter<long> ScmStatusFailures = Meter.CreateCounter<long>("axiom.scm.status_failures", description: "Status checks that could not be published to the source-control system.");
     public static readonly Counter<long> ExceptionUsage = Meter.CreateCounter<long>("axiom.exception.usage", description: "Exceptions applied during evaluations.");
     public static readonly Histogram<double> IngestionLag = Meter.CreateHistogram<double>("axiom.ingestion.lag", "s", "Delay between a governance commit and its published snapshot.");
 

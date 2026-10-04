@@ -54,9 +54,17 @@ internal static class EvaluationEndpoints
             EvaluationResult.From(await service.ExecuteAsync(principal, ToRequest(body), ct)))
             .WithName("validateDiff");
 
-        evaluations.MapPost("/pr", async (DiffBody body, AxiomPrincipal principal, DiffEvaluationService service, CancellationToken ct) =>
-            EvaluationResult.From(await service.ExecutePullRequestAsync(principal, ToRequest(body), ct)))
-            .WithName("validatePullRequest");
+        evaluations.MapPost("/pr", async (
+            DiffBody body, AxiomPrincipal principal, DiffEvaluationService service, PullRequestStatusReporter reporter, IConfiguration configuration, CancellationToken ct) =>
+        {
+            var stored = await service.ExecutePullRequestAsync(principal, ToRequest(body), ct);
+            if (configuration.GetValue<bool>("Axiom:Scm:PublishStatus"))
+            {
+                await reporter.ReportAsync(stored, configuration["Axiom:Scm:PublicBaseUrl"], ct);
+            }
+
+            return EvaluationResult.From(stored);
+        }).WithName("validatePullRequest");
 
         evaluations.MapGet("/{id}", async (string id, AxiomPrincipal principal, ReviewService reviews, CancellationToken ct) =>
         {

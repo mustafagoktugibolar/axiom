@@ -16,6 +16,7 @@ public static class ApplicationModule
         services.AddScoped<PreflightService>();
         services.AddScoped<DesignValidationService>();
         services.AddScoped<DiffEvaluationService>();
+        services.AddScoped<PullRequestStatusReporter>();
         services.AddScoped<ReviewService>();
         return services;
     }

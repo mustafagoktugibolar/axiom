@@ -15,6 +15,12 @@ public static class ScmModule
 
         services.AddOptions<ScmOptions>().Bind(configuration.GetSection(ScmOptions.SectionName));
         services.TryAddScoped<IScmDiffSource, GitScmDiffSource>();
+
+        // Redirects are not followed: a token must never be replayed to another host.
+        services.AddHttpClient(ScmStatusPublisher.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(30))
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false })
+            .AddStandardResilienceHandler();
+        services.TryAddScoped<IScmStatusPublisher, ScmStatusPublisher>();
         return services;
     }
 }
