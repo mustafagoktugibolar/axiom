@@ -13,6 +13,8 @@ public sealed record PreflightBody(string? Organization, string Repository, stri
 
 public sealed record DesignBody(string? Organization, string Repository, string Ref, JsonElement? Design, string? DesignMarkdown, string? PreflightEvaluationId, HarnessBody? Harness);
 
+public sealed record DiffBody(string? Organization, string Repository, string BaseSha, string HeadSha, string? Ref, string? PullRequest, string? DesignEvaluationId, HarnessBody? Harness);
+
 public sealed record ReviewBody(bool Approve, string Comment);
 
 public sealed record CommentBody(string Comment);
@@ -47,6 +49,14 @@ internal static class EvaluationEndpoints
                 new DesignValidationRequest(body.Organization, body.Repository, body.Ref, body.Design, body.DesignMarkdown, body.PreflightEvaluationId, body.Harness?.Type, body.Harness?.SessionId),
                 ct)))
             .WithName("validateDesign");
+
+        evaluations.MapPost("/diff", async (DiffBody body, AxiomPrincipal principal, DiffEvaluationService service, CancellationToken ct) =>
+            EvaluationResult.From(await service.ExecuteAsync(principal, ToRequest(body), ct)))
+            .WithName("validateDiff");
+
+        evaluations.MapPost("/pr", async (DiffBody body, AxiomPrincipal principal, DiffEvaluationService service, CancellationToken ct) =>
+            EvaluationResult.From(await service.ExecutePullRequestAsync(principal, ToRequest(body), ct)))
+            .WithName("validatePullRequest");
 
         evaluations.MapGet("/{id}", async (string id, AxiomPrincipal principal, ReviewService reviews, CancellationToken ct) =>
         {
@@ -132,6 +142,9 @@ internal static class EvaluationEndpoints
 
         return routes;
     }
+
+    private static DiffValidationRequest ToRequest(DiffBody body) =>
+        new(body.Organization, body.Repository, body.BaseSha, body.HeadSha, body.Ref, body.PullRequest, body.DesignEvaluationId, body.Harness?.Type, body.Harness?.SessionId);
 
     private static T? ParseEnum<T>(string? value, string name)
         where T : struct, Enum

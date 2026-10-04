@@ -126,32 +126,39 @@ public sealed class CatalogWriter(AxiomDbContext db, IEventOutbox outbox, TimePr
     /// <summary>
     /// Runs inside the ambient transaction, or a new one, holding a per-organization advisory lock so
     /// concurrent imports reconcile one after another instead of racing on the effective rows.
+    /// A new transaction runs under the context's execution strategy, so a host configured to retry
+    /// transient failures re-runs the whole unit; <paramref name="work"/> must therefore be repeatable.
     /// </summary>
     private async Task<T> InTransactionAsync<T>(string organizationId, Func<Task<T>> work, CancellationToken cancellationToken)
     {
-        var transaction = db.Database.CurrentTransaction is null
-            ? await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
-            : null;
-        try
+        if (db.Database.CurrentTransaction is not null)
         {
-            var lockKey = "axiom.catalog:" + organizationId;
-            await db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken).ConfigureAwait(false);
-            var result = await work().ConfigureAwait(false);
-            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            if (transaction is not null)
+            return await LockedAsync(organizationId, work, cancellationToken).ConfigureAwait(false);
+        }
+
+        var attempt = 0;
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            if (attempt++ > 0)
             {
-                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                // A failed attempt may leave half-tracked rows behind; the retry starts from the database.
+                db.ChangeTracker.Clear();
             }
 
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            var result = await LockedAsync(organizationId, work, cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return result;
-        }
-        finally
-        {
-            if (transaction is not null)
-            {
-                await transaction.DisposeAsync().ConfigureAwait(false);
-            }
-        }
+        }).ConfigureAwait(false);
+    }
+
+    private async Task<T> LockedAsync<T>(string organizationId, Func<Task<T>> work, CancellationToken cancellationToken)
+    {
+        var lockKey = "axiom.catalog:" + organizationId;
+        await db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken).ConfigureAwait(false);
+        var result = await work().ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return result;
     }
 
     private async Task ReconcileEntitiesAsync(string organizationId, IEnumerable<SoftwareEntity> entities, ChangeSet changes, CancellationToken cancellationToken)

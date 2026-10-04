@@ -3,6 +3,7 @@ using Axiom.Application.Policy;
 using Axiom.Infrastructure;
 using Axiom.Infrastructure.Catalog;
 using Axiom.Infrastructure.Governance;
+using Axiom.Infrastructure.Scm;
 
 namespace Axiom.Workers;
 
@@ -18,6 +19,7 @@ public static class WorkerComposition
         services.AddAxiomInfrastructure(configuration, "axiom-workers");
         services.AddGovernanceInfrastructure(configuration);
         services.AddCatalogInfrastructure(configuration);
+        services.AddScmInfrastructure(configuration);
         services.AddPolicyEngine();
         return services;
     }

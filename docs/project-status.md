@@ -79,7 +79,8 @@ The spec phases are mostly already in dependency order. Adjustments:
 | System graph (Phase 2) | done, merged | unit tests + 8 Postgres integration tests |
 | Policy engine (5.1-5.6, 5.9) | done, merged (rule coverage is representative, not exhaustive per rule) | 25 unit tests: rules, P3 order-independence, P9 errors never pass, waivers |
 | Host composition | Api and Workers register application, infrastructure, governance, catalog, policy | 2 composition integration tests (WebApplicationFactory + /health/ready) |
-| Everything else (diff/PR, MCP, CLI, semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
+| Phase 8.1-8.8: diff + PR validation (`POST /v1/evaluations/diff`, `/pr`): Git SCM adapter, scope recomputed from the diff, scope expansion vs. the validated design, policy engine run, design-approval lineage | done; CLI/CI exit codes (8.8), status checks (8.9, 8.10) and branch-policy docs (8.11) open | 17 unit + 8 HTTP-level integration tests (real Git + Postgres) |
+| Everything else (MCP, CLI, semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
 
 ## How to resume (new terminal session)
 
@@ -88,10 +89,20 @@ The spec phases are mostly already in dependency order. Adjustments:
 2. Migrations are a single `Initial` (the DB is not deployed). After changing a persistence model run
    `dotnet ef migrations add <Name> -o Persistence/Migrations` from `src/Axiom.Infrastructure`, or, while
    still undeployed, delete the migrations and regenerate `Initial`.
-3. Next slices in order: diff/PR evaluation (Phase 8) -> MCP server (Phase 9) -> CLI -> exceptions
+3. Next slices in order: rest of Phase 8 (CLI, SCM checks, docs) -> MCP server (Phase 9) -> CLI -> exceptions
    workflow -> semantic analyzer (Phase 7) -> onboarding (Phase 11) -> portal (Phase 10) ->
    deploy/CI -> hardening (Phase 12).
 4. Verify with `dotnet build Axiom.slnx && dotnet test Axiom.slnx` (Docker needed for Postgres tests).
+
+## Operational notes
+
+- **SCM fetching is deny-by-default.** `GitScmDiffSource` takes clone URLs from the System Graph, which
+  repositories themselves declare. It fetches only from hosts listed in `Axiom:Scm:AllowedHosts` (or
+  with credentials under `Axiom:Scm:Credentials:<host>`); local paths need `Axiom:Scm:AllowLocalRepositories`.
+- **Hosts retry transient DB failures** (`EnableRetryOnFailure`). Any code that opens its own transaction
+  must run under `Database.CreateExecutionStrategy()`; `CatalogWriter` did not and was fixed.
+- A governance rule bound to a rule ID the engine does not know (for example the spec example
+  `gateway-no-domain-db-access`) yields `POLICY_RULE_UNKNOWN` at REQUIRE_REVIEW (P9), not a pass.
 
 ## Decisions requiring human input
 

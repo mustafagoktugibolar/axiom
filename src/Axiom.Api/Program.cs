@@ -8,6 +8,7 @@ using Axiom.Application.Policy;
 using Axiom.Infrastructure;
 using Axiom.Infrastructure.Catalog;
 using Axiom.Infrastructure.Governance;
+using Axiom.Infrastructure.Scm;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using OpenTelemetry.Trace;
 
@@ -24,6 +25,7 @@ builder.Services.AddAxiomApplication();
 builder.Services.AddAxiomInfrastructure(builder.Configuration, "axiom-api");
 builder.Services.AddGovernanceInfrastructure(builder.Configuration);
 builder.Services.AddCatalogInfrastructure(builder.Configuration);
+builder.Services.AddScmInfrastructure(builder.Configuration);
 builder.Services.AddPolicyEngine();
 builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation());
 builder.Services.AddAxiomAuthentication(builder.Configuration, builder.Environment);
