@@ -22,10 +22,14 @@ gate re-evaluates the immutable commit SHAs on the server, independently of the 
 | `ALLOW`, `ALLOW_WITH_WARNINGS` | merge allowed | 0 | `success` / `succeeded` |
 | `REQUIRE_REVIEW` | a named human authority must approve | 10 | `action_required` / `pending` |
 | `BLOCK` | deterministic violation, rejected design, or unresolved conflict | 20 | `failure` / `failed` |
-| (Axiom unavailable, SCM unreadable) | **no verdict**; fail closed | 3 | not published |
+| (Axiom unreachable or unavailable, SCM unreadable, request rejected, bad credentials) | **no verdict**; fail closed | 3 | not published |
 
 An internal failure is never reported as success: the API answers `503` with a retryable error code and
-the CLI exits 3, so the required check cannot pass.
+the CLI exits 3, so the required check cannot pass. Usage errors exit 2.
+
+`--format github` / `--format azure` additionally emit one workflow annotation per finding; `--format json`
+prints the evaluation exactly as the API returned it. The token is read only from `AXIOM_TOKEN` (never an
+argument, so it stays out of process listings) and is sent only over https (http only for localhost).
 
 ## Configuration
 

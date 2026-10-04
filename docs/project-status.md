@@ -74,15 +74,16 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Phase 3: deterministic resolver, P1/P3/P4/P5/P6 property tests | done (3.10 benchmark open) | unit + FsCheck |
 | Phase 4: preflight, evaluation pipeline, receipts (hash chain), evaluation store | done (4.8 cache = deterministic evaluation IDs; 4.9 metrics defined) | unit + 1 Postgres test |
 | Phase 6: design parser, gate, classifier, review workflow | done except 6.7 depth checks via graph | unit tests |
-| API host: JWT auth, RBAC, tenant check, error mapping, rate limit, health, evaluation/review/receipt endpoints | built, no HTTP-level tests yet | build only |
+| API host: JWT auth, RBAC, tenant check, error mapping, rate limit, health, evaluation/review/receipt endpoints | done | HTTP-level tests through `WebApplicationFactory` (diff, PR, MCP, receipts, authz) |
 | Governance registry infra (1.6-1.12) | done, merged | 23 Postgres integration tests (sync, rebuild, search, Git source) |
 | System graph (Phase 2) | done, merged | unit tests + 8 Postgres integration tests |
 | Policy engine (5.1-5.6, 5.9) | done, merged (rule coverage is representative, not exhaustive per rule) | 25 unit tests: rules, P3 order-independence, P9 errors never pass, waivers |
 | Host composition | Api and Workers register application, infrastructure, governance, catalog, policy | 2 composition integration tests (WebApplicationFactory + /health/ready) |
-| Phase 8.1-8.8: diff + PR validation (`POST /v1/evaluations/diff`, `/pr`): Git SCM adapter, scope recomputed from the diff, scope expansion vs. the validated design, policy engine run, design-approval lineage | done; CLI/CI exit codes (8.8), status checks (8.9, 8.10) and branch-policy docs (8.11) open | 17 unit + 8 HTTP-level integration tests (real Git + Postgres) |
+| Phase 8.1-8.8: diff + PR validation (`POST /v1/evaluations/diff`, `/pr`): Git SCM adapter, scope recomputed from the diff, scope expansion vs. the validated design, policy engine run, design-approval lineage | done | 17 unit + 8 HTTP-level integration tests (real Git + Postgres) |
 | Phase 8.9-8.11: GitHub check runs + Azure DevOps statuses (off by default), `docs/operations/branch-policy.md` | done | 16 unit tests (request shape, verdict mapping, token only to its own API) |
 | Phase 9.1-9.3: MCP server at `/mcp` (stateless streamable HTTP, same auth/rate limit as REST), 9 tools, RFC 9728 resource metadata + 401 challenge; REST: `/v1/governance`, `/v1/impact`, `/v1/context/{id}`, `/v1/evaluations/{id}/findings/{code}` | done except `governance.propose_decision` and `governance.request_exception` (need the exception / candidate workflows) | 7 MCP-client integration tests over real HTTP, Git, Postgres |
-| Everything else ( CLI, semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
+| Phase 8.8 CLI `axiom-cli`: `evaluate-pr`, `evaluate-diff`, `preflight`, `receipt`, `validate-governance`; exit codes 0/10/20, 3 = no verdict (fails closed), 2 = usage; text/json/github/azure output; token only from `AXIOM_TOKEN`, only over https | done | 23 unit tests |
+| Everything else (semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
 
 ## How to resume (new terminal session)
 
@@ -91,7 +92,7 @@ The spec phases are mostly already in dependency order. Adjustments:
 2. Migrations are a single `Initial` (the DB is not deployed). After changing a persistence model run
    `dotnet ef migrations add <Name> -o Persistence/Migrations` from `src/Axiom.Infrastructure`, or, while
    still undeployed, delete the migrations and regenerate `Initial`.
-3. Next slices in order: CLI (8.8, tools/axiom-cli: exit codes per `docs/operations/branch-policy.md`) -> exceptions
+3. Next slices in order: exceptions
    workflow -> semantic analyzer (Phase 7) -> onboarding (Phase 11) -> portal (Phase 10) ->
    deploy/CI -> hardening (Phase 12).
 4. Verify with `dotnet build Axiom.slnx && dotnet test Axiom.slnx` (Docker needed for Postgres tests).
