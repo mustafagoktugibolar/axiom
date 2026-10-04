@@ -18,7 +18,7 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public AxiomDbContext CreateContext() =>
         new(new DbContextOptionsBuilder<AxiomDbContext>()
-            .UseNpgsql(ConnectionString, npgsql => npgsql.UseVector().MigrationsAssembly(typeof(AxiomDbContext).Assembly.FullName))
+            .UseNpgsql(ConnectionString, npgsql => npgsql.UseVector().MigrationsHistoryTable("__ef_migrations", AxiomDbContext.Schema))
             .Options);
 
     /// <summary>A fresh organization ID so tests never observe each other's rows.</summary>

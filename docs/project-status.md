@@ -4,7 +4,7 @@ Durable implementation tracker. The backlog itself lives in
 `axiom-engineering-governance-plane/.kiro/specs/axiom/tasks.md`; this file records
 ordering, state, verification, and items needing a human. It does not restate the backlog.
 
-**Last updated:** 2026-10-03
+**Last updated:** 2026-10-04
 
 ## Source of truth
 
@@ -69,13 +69,35 @@ The spec phases are mostly already in dependency order. Adjustments:
 
 | Area | State | Verification |
 |---|---|---|
-| Foundation: solution, CPM, warnings-as-errors | done | `dotnet build Axiom.slnx` clean |
-| Everything else | not started | — |
+| Foundation: solution, CPM, warnings-as-errors, layering architecture tests | done | build clean, 6 architecture tests |
+| Tasks 0.6, 0.7, 1.1-1.5: schemas, record parser, set validation, snapshot id | done (infrastructure for 1.6-1.12 below) | unit tests |
+| Phase 3: deterministic resolver, P1/P3/P4/P5/P6 property tests | done (3.10 benchmark open) | unit + FsCheck |
+| Phase 4: preflight, evaluation pipeline, receipts (hash chain), evaluation store | done (4.8 cache = deterministic evaluation IDs; 4.9 metrics defined) | unit + 1 Postgres test |
+| Phase 6: design parser, gate, classifier, review workflow | done except 6.7 depth checks via graph | unit tests |
+| API host: JWT auth, RBAC, tenant check, error mapping, rate limit, health, evaluation/review/receipt endpoints | built, no HTTP-level tests yet | build only |
+| Governance registry infra (1.6-1.12) | IN PROGRESS in worktree branch `worktree-agent-a86338adfb3f46595` | WIP commit, unverified |
+| System graph (Phase 2) | IN PROGRESS in `worktree-agent-a375b0cb95b66e772` | WIP commit, unit tests written, integration tests unverified |
+| Policy engine (5.1-5.6, 5.9) | IN PROGRESS in `worktree-agent-a17c39f652c9fb8ee` | rules done, `Axiom.Application/Policy` engine unverified |
+| Everything else (diff/PR, MCP, CLI, semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
 
-## Current work
+## How to resume (new terminal session)
 
-Phase 0.6/0.7 + Phase 1.1–1.6: governance record model, parser, schema / lifecycle /
-ownership / relationship validation.
+1. `git pull` is not needed; work is in `/Users/goktugibolar/dev/axiom`. Subagent branches live in
+   `.claude/worktrees/*` (git-ignored); each branch is based on commit `9b3cec2`.
+2. For each of the three branches: review its diff against `main`, finish its remaining verification
+   (see the original brief in Phase list above), then `git merge` it into `main`. Expect conflicts in
+   `Directory.Packages.props` and `src/Axiom.Infrastructure/Persistence/Migrations/*`: regenerate
+   migrations after merging (delete the per-branch migrations and run
+   `dotnet ef migrations add Initial` from `src/Axiom.Infrastructure`; the DB is not deployed yet).
+3. After merging: wire `AddGovernanceInfrastructure`, `AddCatalogInfrastructure`, `AddPolicyEngine`
+   into `Axiom.Api/Program.cs` and `Axiom.Workers/Program.cs`.
+4. Next slices in order: diff/PR evaluation (Phase 8) -> MCP server (Phase 9) -> CLI -> exceptions
+   workflow -> semantic analyzer (Phase 7) -> onboarding (Phase 11) -> portal (Phase 10) ->
+   deploy/CI -> hardening (Phase 12).
+5. Verify with `dotnet build Axiom.slnx && dotnet test Axiom.slnx` (Docker needed for Postgres tests).
+
+Usage-limit note: subagents were interrupted twice by the session limit; their WIP is committed
+on their branches and marked unverified.
 
 ## Decisions requiring human input
 

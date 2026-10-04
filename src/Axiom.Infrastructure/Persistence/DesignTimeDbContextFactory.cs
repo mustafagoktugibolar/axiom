@@ -10,6 +10,6 @@ internal sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<A
         new(new DbContextOptionsBuilder<AxiomDbContext>()
             .UseNpgsql(
                 Environment.GetEnvironmentVariable("AXIOM_DESIGN_CONNECTION") ?? "Host=localhost;Database=axiom;Username=axiom",
-                npgsql => npgsql.UseVector())
+                npgsql => npgsql.UseVector().MigrationsHistoryTable("__ef_migrations", AxiomDbContext.Schema))
             .Options);
 }
