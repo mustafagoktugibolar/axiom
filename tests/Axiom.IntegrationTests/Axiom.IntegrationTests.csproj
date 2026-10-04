@@ -20,6 +20,9 @@
     <ProjectReference Include="../../src/Axiom.Workers/Axiom.Workers.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="../../axiom-engineering-governance-plane/examples/governance/**/*" LinkBase="SpecExamples" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 </Project>
