@@ -133,9 +133,8 @@ public class GovernanceSearchTests(PostgresFixture postgres)
     public async Task Authority_follows_the_validity_window_on_the_injected_clock()
     {
         using var repo = new GovernanceRepo();
-        await using var harness = new GovernanceHarness(postgres);
-        // ARCH-042 becomes effective on 2026-09-01.
-        harness.Time.SetUtcNow(new DateTimeOffset(2026, 8, 31, 23, 0, 0, TimeSpan.Zero));
+        // ARCH-042 becomes effective on 2026-09-01; the clock starts an hour before it.
+        await using var harness = new GovernanceHarness(postgres, startAt: new DateTimeOffset(2026, 8, 31, 23, 0, 0, TimeSpan.Zero));
         var (config, _) = await SeedAsync(harness, repo);
 
         var before = await harness.SearchAsync(config.OrganizationId, new GovernanceQuery { Ids = ["ARCH-042"] });

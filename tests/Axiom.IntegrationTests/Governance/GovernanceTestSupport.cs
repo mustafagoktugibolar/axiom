@@ -95,9 +95,10 @@ internal sealed class GovernanceHarness : IAsyncDisposable
     private readonly PostgresFixture _postgres;
     private readonly string _cacheDirectory = Path.Combine(Path.GetTempPath(), "axiom-tests", "mirrors-" + Guid.NewGuid().ToString("N"));
 
-    public GovernanceHarness(PostgresFixture postgres, bool allowLocalRepositories = true)
+    public GovernanceHarness(PostgresFixture postgres, bool allowLocalRepositories = true, DateTimeOffset? startAt = null)
     {
         _postgres = postgres;
+        Time = new FakeTimeProvider(startAt ?? new DateTimeOffset(2026, 10, 4, 9, 0, 0, TimeSpan.Zero));
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -113,7 +114,7 @@ internal sealed class GovernanceHarness : IAsyncDisposable
         Services = services.BuildServiceProvider(validateScopes: true);
     }
 
-    public FakeTimeProvider Time { get; } = new(new DateTimeOffset(2026, 10, 4, 9, 0, 0, TimeSpan.Zero));
+    public FakeTimeProvider Time { get; }
 
     public ServiceProvider Services { get; }
 
