@@ -135,7 +135,8 @@ public class CatalogWriterTests(PostgresFixture postgres)
         // Source A now reports only component:a and no edges.
         var result = await _catalog.ImportAsync(_org, Manifest("repo:a#catalog").Entities("component:a"));
 
-        Assert.Equal(new CatalogImportResult(0, 0, 0, 1), result);
+        // component:shared and the Consumes edge pass to source B (two upserts); A's own DependsOn edge goes.
+        Assert.Equal(new CatalogImportResult(1, 1, 0, 1), result);
         var view = await _catalog.QueryAsync(g => g.GetViewAsync(_org, null, 0, 100, CancellationToken.None));
         Assert.Equal(["component:a", "component:b", "component:shared"], view.Nodes.Select(n => n.Ref.ToString()));
         Assert.Equal(["component:b DependsOn component:shared"], view.Edges.Select(e => $"{e.From} {e.Relation} {e.To}"));
