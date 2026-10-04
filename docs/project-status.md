@@ -80,7 +80,9 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Policy engine (5.1-5.6, 5.9) | done, merged (rule coverage is representative, not exhaustive per rule) | 25 unit tests: rules, P3 order-independence, P9 errors never pass, waivers |
 | Host composition | Api and Workers register application, infrastructure, governance, catalog, policy | 2 composition integration tests (WebApplicationFactory + /health/ready) |
 | Phase 8.1-8.8: diff + PR validation (`POST /v1/evaluations/diff`, `/pr`): Git SCM adapter, scope recomputed from the diff, scope expansion vs. the validated design, policy engine run, design-approval lineage | done; CLI/CI exit codes (8.8), status checks (8.9, 8.10) and branch-policy docs (8.11) open | 17 unit + 8 HTTP-level integration tests (real Git + Postgres) |
-| Everything else (MCP, CLI, semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
+| Phase 8.9-8.11: GitHub check runs + Azure DevOps statuses (off by default), `docs/operations/branch-policy.md` | done | 16 unit tests (request shape, verdict mapping, token only to its own API) |
+| Phase 9.1-9.3: MCP server at `/mcp` (stateless streamable HTTP, same auth/rate limit as REST), 9 tools, RFC 9728 resource metadata + 401 challenge; REST: `/v1/governance`, `/v1/impact`, `/v1/context/{id}`, `/v1/evaluations/{id}/findings/{code}` | done except `governance.propose_decision` and `governance.request_exception` (need the exception / candidate workflows) | 7 MCP-client integration tests over real HTTP, Git, Postgres |
+| Everything else ( CLI, semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
 
 ## How to resume (new terminal session)
 
@@ -89,7 +91,7 @@ The spec phases are mostly already in dependency order. Adjustments:
 2. Migrations are a single `Initial` (the DB is not deployed). After changing a persistence model run
    `dotnet ef migrations add <Name> -o Persistence/Migrations` from `src/Axiom.Infrastructure`, or, while
    still undeployed, delete the migrations and regenerate `Initial`.
-3. Next slices in order: rest of Phase 8 (CLI, SCM checks, docs) -> MCP server (Phase 9) -> CLI -> exceptions
+3. Next slices in order: CLI (8.8, tools/axiom-cli: exit codes per `docs/operations/branch-policy.md`) -> exceptions
    workflow -> semantic analyzer (Phase 7) -> onboarding (Phase 11) -> portal (Phase 10) ->
    deploy/CI -> hardening (Phase 12).
 4. Verify with `dotnet build Axiom.slnx && dotnet test Axiom.slnx` (Docker needed for Postgres tests).

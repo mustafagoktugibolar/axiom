@@ -6,6 +6,7 @@ using Axiom.Api.Security;
 using Axiom.Application;
 using Axiom.Application.Policy;
 using Axiom.Infrastructure;
+using Axiom.Mcp;
 using Axiom.Infrastructure.Catalog;
 using Axiom.Infrastructure.Governance;
 using Axiom.Infrastructure.Scm;
@@ -39,6 +40,16 @@ builder.Services.ConfigureHttpJsonOptions(json =>
 });
 builder.Services.AddOpenApi();
 
+// MCP is the agent contract (ADR-0003). It is hosted here, behind the same authentication, rate limits
+// and application use cases as REST. Stateless: every call is authorized on its own token.
+builder.Services.AddMcpServer(server =>
+{
+    server.ServerInfo = new() { Name = "axiom", Title = "Axiom engineering governance", Version = "1.0.0" };
+    server.ServerInstructions =
+        "Call governance.preflight_change before designing or editing. A significant change needs governance.validate_design before implementation, "
+        + "and governance.validate_diff on the actual commits afterwards. Treat REQUIRE_REVIEW and BLOCK as stop. A tool error is never ALLOW.";
+}).WithHttpTransport(http => http.Stateless = true).AddAxiomTools();
+
 builder.Services.AddRateLimiter(limiter =>
 {
     limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -70,6 +81,9 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check 
 app.MapOpenApi().AllowAnonymous();
 
 app.MapEvaluationEndpoints();
+app.MapGovernanceEndpoints();
+app.MapMcp("/mcp");
+app.MapAuthMetadata();
 
 await app.RunAsync();
 

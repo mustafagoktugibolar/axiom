@@ -2,6 +2,7 @@ using Axiom.Application.Catalog;
 using Axiom.Application.Evaluation;
 using Axiom.Application.Governance;
 using Axiom.Application.Policy;
+using Axiom.Application.Query;
 using Axiom.Infrastructure.Persistence;
 using Axiom.Workers;
 using Microsoft.AspNetCore.Hosting;
@@ -19,7 +20,8 @@ public sealed class CompositionTests(PostgresFixture postgres)
     [
         typeof(EvaluationPipeline), typeof(PreflightService), typeof(DiffEvaluationService), typeof(IScmDiffSource), typeof(PolicyEngine), typeof(IPolicyRuleCatalog),
         typeof(IGovernanceSynchronizer), typeof(IGovernanceQueries), typeof(IGovernanceSnapshotProvider),
-        typeof(ISystemGraph), typeof(ICatalogWriter), typeof(AxiomDbContext),
+        typeof(ISystemGraph), typeof(ICatalogWriter), typeof(AxiomDbContext), typeof(GovernanceReadService), typeof(ImpactService),
+        typeof(ContextService), typeof(ReceiptService), typeof(FindingExplanationService), typeof(PullRequestStatusReporter), typeof(IScmStatusPublisher),
     ];
 
     [Fact]

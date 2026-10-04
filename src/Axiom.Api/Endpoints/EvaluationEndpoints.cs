@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Axiom.Application.Common;
 using Axiom.Application.Evaluation;
+using Axiom.Application.Query;
 using Axiom.Application.Review;
 using Axiom.Domain.Audit;
 using Axiom.Domain.Evaluation;
@@ -18,17 +19,6 @@ public sealed record DiffBody(string? Organization, string Repository, string Ba
 public sealed record ReviewBody(bool Approve, string Comment);
 
 public sealed record CommentBody(string Comment);
-
-public sealed record ReceiptBody(
-    string ReceiptId, string EvaluationId, string Stage, string Verdict, string Repository, string? CommitSha, string SnapshotId,
-    DateTimeOffset IssuedAt, string Digest, string PreviousChainDigest, string ChainDigest, bool Verified, JsonElement Payload)
-{
-    public static ReceiptBody From(Receipt r) => new(
-        r.Id, r.EvaluationId, EvaluationResult.StageName(r.Stage), VerdictLattice.ToContract(r.Verdict), r.Repository, r.CommitSha, r.SnapshotId,
-        r.IssuedAt, r.Digest, r.PreviousChainDigest, r.ChainDigest, ReceiptFactory.Verify(r), JsonDocument.Parse(r.Payload).RootElement.Clone());
-}
-
-public sealed record ChainVerificationBody(bool Intact, long Receipts, string? FirstBrokenReceiptId, string HeadChainDigest);
 
 internal static class EvaluationEndpoints
 {
@@ -114,39 +104,14 @@ internal static class EvaluationEndpoints
 
         var receipts = routes.MapGroup("/v1/receipts").WithTags("Receipts");
 
-        receipts.MapGet("/{id}", async (string id, AxiomPrincipal principal, IEvaluationStore store, CancellationToken ct) =>
-        {
-            Authorizer.Demand(principal, AccessRight.ReadAudit);
-            var receipt = await store.FindReceiptAsync(principal.OrganizationId, id, ct) ?? throw AxiomException.NotFound($"Receipt '{id}'");
-            return ReceiptBody.From(receipt);
-        }).WithName("getReceipt");
+        receipts.MapGet("/{id}", async (string id, AxiomPrincipal principal, ReceiptService service, CancellationToken ct) =>
+            await service.GetAsync(principal, id, ct)).WithName("getReceipt");
 
-        receipts.MapGet("/", async (string repository, string commitSha, string? stage, AxiomPrincipal principal, IEvaluationStore store, CancellationToken ct) =>
-        {
-            Authorizer.Demand(principal, AccessRight.ReadAudit);
-            var receipt = await store.FindReceiptByCommitAsync(principal.OrganizationId, repository, commitSha, ParseEnum<EvaluationStage>(stage, "stage"), ct)
-                ?? throw AxiomException.NotFound($"A receipt for {repository}@{commitSha}");
-            return ReceiptBody.From(receipt);
-        }).WithName("getReceiptByCommit");
+        receipts.MapGet("/", async (string repository, string commitSha, string? stage, AxiomPrincipal principal, ReceiptService service, CancellationToken ct) =>
+            await service.GetByCommitAsync(principal, repository, commitSha, ParseEnum<EvaluationStage>(stage, "stage"), ct)).WithName("getReceiptByCommit");
 
-        receipts.MapGet("/chain/verify", async (AxiomPrincipal principal, IEvaluationStore store, CancellationToken ct) =>
-        {
-            Authorizer.Demand(principal, AccessRight.ReadAudit);
-            long count = 0;
-            var expected = ReceiptFactory.GenesisDigest;
-            await foreach (var receipt in store.ReadChainAsync(principal.OrganizationId, ct))
-            {
-                count++;
-                if (!ReceiptFactory.Verify(receipt) || !string.Equals(receipt.PreviousChainDigest, expected, StringComparison.Ordinal))
-                {
-                    return new ChainVerificationBody(false, count, receipt.Id, expected);
-                }
-
-                expected = receipt.ChainDigest;
-            }
-
-            return new ChainVerificationBody(true, count, null, expected);
-        }).WithName("verifyReceiptChain");
+        receipts.MapGet("/chain/verify", async (AxiomPrincipal principal, ReceiptService service, CancellationToken ct) =>
+            await service.VerifyChainAsync(principal, ct)).WithName("verifyReceiptChain");
 
         return routes;
     }

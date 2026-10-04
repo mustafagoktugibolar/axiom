@@ -62,10 +62,7 @@ public sealed record EvaluationResult(
             VerdictLattice.ToContract(e.Verdict),
             e.Significance.IsSignificant,
             [.. e.Significance.Triggers.Select(t => new SignificanceTriggerDto(t.Code, t.ChangeClass, t.Explanation, t.Evidence, t.SourceRecordId))],
-            e.ResolvedScope.Dimensions.ToImmutableSortedDictionary(
-                kv => ScopeKeys.GetValueOrDefault(kv.Key, kv.Key),
-                kv => kv.Value.Select(DisplayName).ToImmutableArray(),
-                StringComparer.Ordinal),
+            ContractScope(e.ResolvedScope),
             e.ResolvedScope.Gaps,
             [.. e.AppliedRecords.Select(r => new ApplicableGovernanceDto(
                 r.Id, r.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture), r.Kind.ToString(), r.Importance.ToString().ToLowerInvariant(),
@@ -83,6 +80,16 @@ public sealed record EvaluationResult(
             e.DesignId,
             e.DesignHash,
             e.CreatedAt);
+    }
+
+    /// <summary>The wire form of a resolved scope: plural dimension names and entity names without their kind prefix.</summary>
+    public static ImmutableSortedDictionary<string, ImmutableArray<string>> ContractScope(ResolvedScopeView scope)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        return scope.Dimensions.ToImmutableSortedDictionary(
+            kv => ScopeKeys.GetValueOrDefault(kv.Key, kv.Key),
+            kv => kv.Value.Select(DisplayName).ToImmutableArray(),
+            StringComparer.Ordinal);
     }
 
     public static string StageName(EvaluationStage stage) => stage switch

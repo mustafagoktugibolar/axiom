@@ -88,6 +88,8 @@ internal sealed class ApiHost : IAsyncDisposable
         return client;
     }
 
+    public HttpClient AnonymousClient() => _factory.CreateClient();
+
     public static async Task<(int Status, JsonElement Body)> PostAsync(HttpClient client, string path, object body)
     {
         using var response = await client.PostAsJsonAsync(new Uri(path, UriKind.Relative), body);

@@ -66,6 +66,19 @@ public static class AxiomAuth
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(jwt =>
         {
             jwt.MapInboundClaims = false;
+            jwt.Events = new JwtBearerEvents
+            {
+                // RFC 9728: tell OAuth clients (including MCP clients) where the resource metadata lives.
+                OnChallenge = context =>
+                {
+                    var failed = context.AuthenticateFailure is not null;
+                    context.Response.Headers.WWWAuthenticate =
+                        $"Bearer realm=\"axiom\"{(failed ? ", error=\"invalid_token\"" : string.Empty)}, resource_metadata=\"{AuthMetadataEndpoints.MetadataUrl(context.HttpContext)}\"";
+                    context.HandleResponse();
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                },
+            };
             jwt.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
