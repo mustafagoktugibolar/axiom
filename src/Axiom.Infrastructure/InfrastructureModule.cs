@@ -1,5 +1,6 @@
 using Axiom.Application.Common;
 using Axiom.Application.Evaluation;
+using Axiom.Application.Exceptions;
 using Axiom.Application.Review;
 using Axiom.Infrastructure.Audit;
 using Axiom.Infrastructure.Persistence;
@@ -35,6 +36,7 @@ public static class InfrastructureModule
         services.AddScoped<IEventOutbox, EfEventOutbox>();
         services.AddScoped<IEvaluationStore, EfEvaluationStore>();
         services.AddScoped<IReviewStore, EfReviewStore>();
+        services.AddScoped<IExceptionRequestStore, EfExceptionRequestStore>();
 
         services.AddHealthChecks().AddDbContextCheck<AxiomDbContext>("postgresql", tags: ["ready"]);
 

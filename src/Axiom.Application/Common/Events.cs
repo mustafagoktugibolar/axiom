@@ -10,6 +10,8 @@ public static class EventTypes
     public const string EvaluationCompleted = "evaluation.completed";
     public const string EvaluationBlocked = "evaluation.blocked";
     public const string ExceptionExpiring = "exception.expiring";
+    public const string ExceptionRequested = "exception.requested";
+    public const string ExceptionDecided = "exception.decided";
     public const string CandidateDecisionCreated = "candidate.decision.created";
 }
 

@@ -50,6 +50,15 @@ internal sealed class ApiHost : IAsyncDisposable
 
     public GovernanceRepo Code { get; }
 
+    /// <summary>Publishes the current head of the governance repository as a new snapshot.</summary>
+    public async Task SyncGovernanceAsync()
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var sync = await scope.ServiceProvider.GetRequiredService<IGovernanceSynchronizer>()
+            .SynchronizeAsync(Governance.ConfigFor(Organization), SyncMode.Incremental, CancellationToken.None);
+        Assert.Equal(SyncOutcome.Published, sync.Outcome);
+    }
+
     /// <summary>Syncs the governance repository and registers the code repository in the System Graph.</summary>
     public async Task SeedAsync(string repositoryName = "gateway")
     {
@@ -67,7 +76,9 @@ internal sealed class ApiHost : IAsyncDisposable
             .ImportAsync(Organization, new CatalogImport(ProvenanceSource.RepositoryManifest, "repo:" + repositoryName + "#catalog", [entity], []), CancellationToken.None);
     }
 
-    public HttpClient Client(params string[] roles)
+    public HttpClient Client(params string[] roles) => ClientFor("ci-bot", [], roles);
+
+    public HttpClient ClientFor(string subject, string[] teams, params string[] roles)
     {
         var client = _factory.CreateClient();
         var handler = new JsonWebTokenHandler();
@@ -78,7 +89,8 @@ internal sealed class ApiHost : IAsyncDisposable
             Expires = DateTime.UtcNow.AddHours(1),
             Claims = new Dictionary<string, object>
             {
-                ["sub"] = "ci-bot",
+                ["sub"] = subject,
+                ["groups"] = teams,
                 ["org"] = Organization,
                 ["roles"] = roles.Length == 0 ? new[] { "contributor" } : roles,
             },
@@ -89,6 +101,13 @@ internal sealed class ApiHost : IAsyncDisposable
     }
 
     public HttpClient AnonymousClient() => _factory.CreateClient();
+
+    public static async Task<(int Status, JsonElement Body)> GetAsync(HttpClient client, string path)
+    {
+        using var response = await client.GetAsync(new Uri(path, UriKind.Relative));
+        var json = await response.Content.ReadAsStringAsync();
+        return ((int)response.StatusCode, json.Length == 0 ? default : JsonDocument.Parse(json).RootElement.Clone());
+    }
 
     public static async Task<(int Status, JsonElement Body)> PostAsync(HttpClient client, string path, object body)
     {

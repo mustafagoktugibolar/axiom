@@ -14,7 +14,7 @@ using NpgsqlTypes;
 namespace Axiom.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AxiomDbContext))]
-    [Migration("20261004101357_Initial")]
+    [Migration("20261004220730_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -265,6 +265,84 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_evaluation_commit");
 
                     b.ToTable("evaluation", "axiom");
+                });
+
+            modelBuilder.Entity("Axiom.Infrastructure.Audit.ExceptionDecisionRow", b =>
+                {
+                    b.Property<string>("OrganizationId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("RequestId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("request_id");
+
+                    b.Property<bool>("Approved")
+                        .HasColumnType("boolean")
+                        .HasColumnName("approved");
+
+                    b.Property<string>("Approver")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("approver");
+
+                    b.Property<string>("ApproverIdentity")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("approver_identity");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTimeOffset>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.HasKey("OrganizationId", "RequestId");
+
+                    b.ToTable("exception_decision", "axiom");
+                });
+
+            modelBuilder.Entity("Axiom.Infrastructure.Audit.ExceptionRequestRow", b =>
+                {
+                    b.Property<string>("OrganizationId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Document")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("document");
+
+                    b.Property<string>("Requester")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("requester");
+
+                    b.HasKey("OrganizationId", "Id");
+
+                    b.HasIndex("OrganizationId", "Requester", "CreatedAt")
+                        .HasDatabaseName("ix_exception_request_requester");
+
+                    b.ToTable("exception_request", "axiom");
                 });
 
             modelBuilder.Entity("Axiom.Infrastructure.Audit.ReceiptRow", b =>

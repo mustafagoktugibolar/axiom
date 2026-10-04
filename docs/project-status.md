@@ -81,8 +81,9 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Host composition | Api and Workers register application, infrastructure, governance, catalog, policy | 2 composition integration tests (WebApplicationFactory + /health/ready) |
 | Phase 8.1-8.8: diff + PR validation (`POST /v1/evaluations/diff`, `/pr`): Git SCM adapter, scope recomputed from the diff, scope expansion vs. the validated design, policy engine run, design-approval lineage | done | 17 unit + 8 HTTP-level integration tests (real Git + Postgres) |
 | Phase 8.9-8.11: GitHub check runs + Azure DevOps statuses (off by default), `docs/operations/branch-policy.md` | done | 16 unit tests (request shape, verdict mapping, token only to its own API) |
-| Phase 9.1-9.3: MCP server at `/mcp` (stateless streamable HTTP, same auth/rate limit as REST), 9 tools, RFC 9728 resource metadata + 401 challenge; REST: `/v1/governance`, `/v1/impact`, `/v1/context/{id}`, `/v1/evaluations/{id}/findings/{code}` | done except `governance.propose_decision` and `governance.request_exception` (need the exception / candidate workflows) | 7 MCP-client integration tests over real HTTP, Git, Postgres |
+| Phase 9.1-9.3: MCP server at `/mcp` (stateless streamable HTTP, same auth/rate limit as REST), 11 tools, RFC 9728 resource metadata + 401 challenge; REST: `/v1/governance`, `/v1/impact`, `/v1/context/{id}`, `/v1/evaluations/{id}/findings/{code}` | done except `governance.propose_decision` (needs the candidate workflow of Phase 11) | 7 MCP-client integration tests over real HTTP, Git, Postgres |
 | Phase 8.8 CLI `axiom-cli`: `evaluate-pr`, `evaluate-diff`, `preflight`, `receipt`, `validate-governance`; exit codes 0/10/20, 3 = no verdict (fails closed), 2 = usage; text/json/github/azure output; token only from `AXIOM_TOKEN`, only over https | done | 23 unit tests |
+| Exception workflow (R10, R11, ADR-0006): `POST/GET /v1/exceptions/requests`, `POST .../{id}/decision`, MCP `governance.request_exception` / `get_exception_request`. Requests are validated by the same `GovernanceSetValidator` rules that guard Git (exemptable, governing, scope inside target, window <= 180 days, tracking issue), routed to target owners, decided once by someone other than the requester, audited append-only, and yield a draft record (`status: proposed`, `accepted` after approval). Approval waives nothing: only the record merged into the governance repository does | done (Axiom never writes to Git; a maintainer commits the draft). Expiry review (13.7) and `exception.expiring` events not built | 19 unit + 3 end-to-end tests incl. the full request -> approve -> merge -> waived lifecycle |
 | Everything else (semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
 
 ## How to resume (new terminal session)
@@ -92,8 +93,7 @@ The spec phases are mostly already in dependency order. Adjustments:
 2. Migrations are a single `Initial` (the DB is not deployed). After changing a persistence model run
    `dotnet ef migrations add <Name> -o Persistence/Migrations` from `src/Axiom.Infrastructure`, or, while
    still undeployed, delete the migrations and regenerate `Initial`.
-3. Next slices in order: exceptions
-   workflow -> semantic analyzer (Phase 7) -> onboarding (Phase 11) -> portal (Phase 10) ->
+3. Next slices in order: semantic analyzer (Phase 7) -> onboarding (Phase 11) -> portal (Phase 10) ->
    deploy/CI -> hardening (Phase 12).
 4. Verify with `dotnet build Axiom.slnx && dotnet test Axiom.slnx` (Docker needed for Postgres tests).
 

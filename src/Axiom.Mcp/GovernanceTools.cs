@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Text.Json;
 using Axiom.Application.Common;
 using Axiom.Application.Evaluation;
+using Axiom.Application.Exceptions;
 using Axiom.Application.Governance;
 using Axiom.Application.Query;
 using Axiom.Domain.Evaluation;
@@ -38,6 +39,7 @@ public sealed class GovernanceTools(
     ContextService context,
     ReceiptService receipts,
     FindingExplanationService explanations,
+    ExceptionRequestService exceptions,
     ILogger<GovernanceTools> logger)
 {
     [McpServerTool(Name = "governance.preflight_change", Title = "Preflight a change", ReadOnly = false, Idempotent = true, OpenWorld = false)]
@@ -198,6 +200,30 @@ public sealed class GovernanceTools(
         [Description("File path, to pick one of several findings with the same code.")] string? path = null,
         CancellationToken cancellationToken = default) =>
         McpErrors.RunAsync(logger, "explain_finding", () => explanations.ExplainAsync(principal, evaluationId, code, path, cancellationToken));
+
+    [McpServerTool(Name = "governance.request_exception", Title = "Request an exception", ReadOnly = false, Idempotent = true, OpenWorld = false)]
+    [Description("Requests a scoped, expiring exception to one or more governance records. This never grants the exception: it validates the request, routes it to the "
+        + "owners of the target records and returns a draft record. The exception applies only after owners approve it and the record is accepted in the governance repository. "
+        + "Hard (non-exemptable) controls cannot be waived. Do not proceed as if the exception existed.")]
+    public Task<ExceptionRequestDto> RequestException(
+        [Description("IDs of the governance records to deviate from, for example ['ARCH-042'].")] string[] targets,
+        [Description("Exact scope, by dimension: {\"repositories\":[\"gateway\"],\"paths\":[\"src/Legacy/**\"]}. Must lie inside the targets' scope.")] Dictionary<string, string[]> scope,
+        [Description("Why the deviation is needed, at least 20 characters.")] string rationale,
+        [Description("When the exception ends (UTC). At most 180 days after it starts.")] DateTimeOffset expiresAt,
+        [Description("Issue or migration plan that ends the deviation.")] string trackingIssue,
+        [Description("Short title; defaults to one derived from the targets.")] string? title = null,
+        [Description("When it starts (UTC); defaults to now.")] DateTimeOffset? startsAt = null,
+        [Description("Measures that limit the risk while the exception is active.")] string[]? compensatingControls = null,
+        CancellationToken cancellationToken = default) =>
+        McpErrors.RunAsync(logger, "request_exception", () => exceptions.RequestAsync(
+            principal, new ExceptionRequestInput(targets, scope, title, rationale, startsAt, expiresAt, trackingIssue, compensatingControls), cancellationToken));
+
+    [McpServerTool(Name = "governance.get_exception_request", Title = "Get an exception request", ReadOnly = true, Idempotent = true, OpenWorld = false)]
+    [Description("Returns the status of an exception request: pending, approved or rejected, with the decision and the draft governance record.")]
+    public Task<ExceptionRequestDto> GetExceptionRequest(
+        [Description("Exception request ID returned by governance.request_exception.")] string id,
+        CancellationToken cancellationToken = default) =>
+        McpErrors.RunAsync(logger, "get_exception_request", () => exceptions.GetAsync(principal, id, cancellationToken));
 
     private static T ParseEnum<T>(string value, string name)
         where T : struct, Enum =>

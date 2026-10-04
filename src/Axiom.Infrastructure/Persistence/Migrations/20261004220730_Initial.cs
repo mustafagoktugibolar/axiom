@@ -106,6 +106,40 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "exception_decision",
+                schema: "axiom",
+                columns: table => new
+                {
+                    organization_id = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    request_id = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    approved = table.Column<bool>(type: "boolean", nullable: false),
+                    approver = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    approver_identity = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    comment = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
+                    decided_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_exception_decision", x => new { x.organization_id, x.request_id });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "exception_request",
+                schema: "axiom",
+                columns: table => new
+                {
+                    organization_id = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    id = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    requester = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    document = table.Column<string>(type: "jsonb", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_exception_request", x => new { x.organization_id, x.id });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "governance_record",
                 schema: "axiom",
                 columns: table => new
@@ -476,6 +510,12 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                 .Annotation("Npgsql:IndexMethod", "gin");
 
             migrationBuilder.CreateIndex(
+                name: "ix_exception_request_requester",
+                schema: "axiom",
+                table: "exception_request",
+                columns: new[] { "organization_id", "requester", "created_at" });
+
+            migrationBuilder.CreateIndex(
                 name: "ix_governance_record_kind",
                 schema: "axiom",
                 table: "governance_record",
@@ -632,6 +672,14 @@ namespace Axiom.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "evaluation_finding",
+                schema: "axiom");
+
+            migrationBuilder.DropTable(
+                name: "exception_decision",
+                schema: "axiom");
+
+            migrationBuilder.DropTable(
+                name: "exception_request",
                 schema: "axiom");
 
             migrationBuilder.DropTable(

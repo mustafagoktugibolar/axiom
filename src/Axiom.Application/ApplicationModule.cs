@@ -1,4 +1,5 @@
 using Axiom.Application.Evaluation;
+using Axiom.Application.Exceptions;
 using Axiom.Application.Query;
 using Axiom.Application.Review;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ public static class ApplicationModule
         services.AddScoped<DesignValidationService>();
         services.AddScoped<DiffEvaluationService>();
         services.AddScoped<PullRequestStatusReporter>();
+        services.AddScoped<ExceptionRequestService>();
         services.AddScoped<GovernanceReadService>();
         services.AddScoped<ImpactService>();
         services.AddScoped<ReceiptService>();

@@ -82,6 +82,7 @@ app.MapOpenApi().AllowAnonymous();
 
 app.MapEvaluationEndpoints();
 app.MapGovernanceEndpoints();
+app.MapExceptionEndpoints();
 app.MapMcp("/mcp");
 app.MapAuthMetadata();
 
