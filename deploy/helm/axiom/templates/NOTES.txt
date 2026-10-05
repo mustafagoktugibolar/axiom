@@ -1,0 +1,11 @@
+Axiom is deployed.
+{{- if .Values.ingress.enabled }}
+  Portal and API: http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}   MCP: /mcp
+{{- else }}
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "axiom.fullname" . }} 8080:{{ .Values.service.port }}
+  then open http://localhost:8080
+{{- end }}
+{{- if .Values.auth.devMode.enabled }}
+
+WARNING: devMode is on. Anyone who can reach this service can sign in as a platform admin.
+{{- end }}

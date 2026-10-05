@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: axiom
+spec:
+  tls: [{ hosts: [axiom.example.com], secretName: axiom-tls }]
+  rules:
+    - host: axiom.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: axiom, port: { name: http } } }

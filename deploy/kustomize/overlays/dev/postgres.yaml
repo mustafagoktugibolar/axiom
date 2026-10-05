@@ -1,0 +1,40 @@
+# Evaluation-grade single-instance PostgreSQL. No backups, no HA.
+apiVersion: v1
+kind: Service
+metadata:
+  name: axiom-postgres
+spec:
+  clusterIP: None
+  selector: { app.kubernetes.io/component: postgres }
+  ports: [{ port: 5432 }]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: axiom-postgres
+spec:
+  serviceName: axiom-postgres
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/component: postgres }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/component: postgres }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17
+          env:
+            - { name: POSTGRES_USER, value: axiom }
+            - { name: POSTGRES_DB, value: axiom }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: axiom-secrets, key: postgres-password } }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          ports: [{ containerPort: 5432 }]
+          readinessProbe: { exec: { command: [pg_isready, -U, axiom] }, periodSeconds: 5 }
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources: { requests: { storage: 5Gi } }

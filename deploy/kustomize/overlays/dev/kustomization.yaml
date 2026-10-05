@@ -1,0 +1,28 @@
+# Local evaluation: in-cluster Postgres and the built-in dev login (no identity provider).
+# NOT for shared or internet-reachable clusters: anyone who reaches the service signs in as a platform admin.
+# Replace the literals below, or better, create the secret out of band.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - postgres.yaml
+patches:
+  - target: { kind: Deployment, name: axiom-api }
+    path: dev-env.yaml
+  - target: { kind: Deployment, name: axiom-workers }
+    path: dev-env.yaml
+  - target: { kind: Job, name: axiom-migrate }
+    path: dev-env-job.yaml
+  - target: { kind: Deployment, name: axiom-api }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+secretGenerator:
+  - name: axiom-secrets
+    literals:
+      - connection-string=Host=axiom-postgres;Username=axiom;Password=dev-only-change-me;Database=axiom
+      - dev-signing-key=dev-only-signing-key-change-me-0123456789
+      - postgres-password=dev-only-change-me
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,80 @@
+image:
+  registry: ""            # e.g. ghcr.io/your-org
+  api: axiom-api
+  workers: axiom-workers
+  tag: ""                 # defaults to Chart.appVersion
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+# Public URL users and MCP clients reach (used for OAuth resource metadata).
+publicBaseUrl: ""
+
+auth:
+  # Production: OIDC. The portal signs in with authorization code + PKCE as a public client.
+  authority: ""           # OIDC issuer, https
+  audience: axiom
+  portalClientId: ""
+  organizationClaim: org
+  rolesClaim: roles
+  teamsClaim: groups
+  # Local evaluation ONLY. Runs the API in the Development environment with a built-in dev login
+  # (no identity provider). Never enable on a shared or internet-reachable cluster.
+  devMode:
+    enabled: false
+    signingKey: ""        # 32+ chars; or set secrets.existingSecret with key "dev-signing-key"
+
+database:
+  # External PostgreSQL (recommended). Ignored when database.embedded.enabled.
+  connectionString: ""
+  embedded:
+    enabled: false        # single-instance Postgres for evaluation; no backups, no HA
+    password: ""
+    storage: 5Gi
+    storageClassName: ""
+    image: postgres:17
+
+secrets:
+  # Use an existing Secret instead of one rendered by this chart. Keys:
+  #   connection-string, dev-signing-key (devMode only)
+  existingSecret: ""
+
+# Extra settings rendered into the ConfigMap as environment variables, for example
+#   Axiom__Scm__AllowedHosts__0: github.com
+config: {}
+
+api:
+  replicas: 2
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 512Mi }
+  autoscaling: { enabled: false, minReplicas: 2, maxReplicas: 6, targetCPUUtilizationPercentage: 70 }
+  podDisruptionBudget: { enabled: true, minAvailable: 1 }
+
+workers:
+  enabled: true
+  replicas: 1
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 512Mi }
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: axiom.example.com
+  tls:
+    enabled: false
+    secretName: ""
+
+# Applies EF migrations as a Helm hook Job before install/upgrade.
+migrations:
+  enabled: true
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

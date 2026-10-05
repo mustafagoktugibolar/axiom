@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: axiom
+labels:
+  - pairs: { app.kubernetes.io/name: axiom, app.kubernetes.io/managed-by: kustomize }
+    includeSelectors: false
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - configmap.yaml
+  - api.yaml
+  - workers.yaml
+  - migrate-job.yaml
+images:
+  - name: axiom-api
+    newName: axiom-api
+    newTag: "0.1.0"
+  - name: axiom-workers
+    newName: axiom-workers
+    newTag: "0.1.0"
+# Overlays must provide a Secret named "axiom-secrets" with key connection-string (and
+# dev-signing-key when running in development mode). The base never contains credentials.

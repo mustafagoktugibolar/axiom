@@ -1,0 +1,8 @@
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value: { name: ASPNETCORE_ENVIRONMENT, value: Development }
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: Axiom__Auth__DevelopmentSigningKey
+    valueFrom: { secretKeyRef: { name: axiom-secrets, key: dev-signing-key } }

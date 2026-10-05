@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: axiom-config
+data:
+  Axiom__Auth__Audience: axiom
+  Axiom__Auth__OrganizationClaim: org
+  Axiom__Auth__RolesClaim: roles
+  Axiom__Auth__TeamsClaim: groups
+  # Set per environment in an overlay:
+  #   Axiom__Auth__Authority, Axiom__Auth__PortalClientId, Axiom__PublicBaseUrl

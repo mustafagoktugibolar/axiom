@@ -30,6 +30,12 @@ public sealed class AxiomAuthOptions
     public string? DevelopmentSigningKey { get; set; }
 
     public string DevelopmentIssuer { get; set; } = "https://axiom.localhost";
+
+    /// <summary>Public OIDC client (authorization code + PKCE) the portal signs in with. No secret: it is a browser app.</summary>
+    public string? PortalClientId { get; set; }
+
+    /// <summary>Scopes the portal requests. They must map to roles (see <c>AxiomAuth</c>) or the IdP must emit the roles claim.</summary>
+    public string PortalScopes { get; set; } = "openid profile axiom.read axiom.evaluate axiom.exception.request";
 }
 
 public static class AxiomAuth

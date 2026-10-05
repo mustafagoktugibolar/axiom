@@ -87,7 +87,9 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Harness packs (9.4-9.6): portable `AGENTS.md`, Kiro steering + agent-stop hook + MCP config, Claude Code `CLAUDE.md` + hooks + MCP config (`integrations/`) | done; 9.7-9.9 (Codex, Cursor, Copilot) read `AGENTS.md`, no dedicated packs; 9.10 conformance tests not built | `axiom-cli` flags checked against `--help` |
 | CI (`.github/workflows/ci.yml`): build + test, portal build | done | not yet run on a hosted runner |
 | Basic portal (`src/Axiom.Portal`, Vue 3 + TS): governance search/filter, record detail with revision history and relations, evaluation/receipt lookup, review queue (raw); served same-origin by the API when `Axiom:Portal:Path` is set. Auth is a pasted bearer token (OIDC sign-in not built) | done (MVP-level; 10.3-10.4 graphs, 10.6-10.8 rich views not built) | `npm run build` (vue-tsc + vite) |
-| Everything else (semantic, onboarding, deploy packaging, hardening) | not started; semantic is post-MVP per the PRD | - |
+| Portal sign-in: OIDC authorization code + PKCE (`/v1/auth/config` advertises authority/client), Development-only `/v1/auth/dev-login`; no pasted tokens | done | 2 integration tests written (need Docker; not run in this session) |
+| Deployment: Dockerfile (api incl. portal, workers), Helm chart `deploy/helm/axiom`, Kustomize base + dev/prod overlays, `--migrate` mode for the migration Job | done | `helm lint`/`template` and `kubectl kustomize` render clean; images and a live cluster install not tested |
+| Everything else (semantic, onboarding, hardening) | not started; semantic is post-MVP per the PRD | - |
 
 ## How to resume (new terminal session)
 

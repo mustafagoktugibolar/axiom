@@ -1,0 +1,27 @@
+# Production: OIDC sign-in, external PostgreSQL. Create the Secret out of band (sealed-secrets, External
+# Secrets, Vault, ...); this overlay deliberately contains no credentials:
+#   kubectl -n axiom create secret generic axiom-secrets --from-literal=connection-string='Host=...;...'
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - ingress.yaml
+patches:
+  - target: { kind: ConfigMap, name: axiom-config }
+    patch: |-
+      - op: add
+        path: /data/Axiom__Auth__Authority
+        value: https://idp.example.com/realms/axiom
+      - op: add
+        path: /data/Axiom__Auth__PortalClientId
+        value: axiom-portal
+      - op: add
+        path: /data/Axiom__PublicBaseUrl
+        value: https://axiom.example.com
+images:
+  - name: axiom-api
+    newName: registry.example.com/axiom-api
+    newTag: "0.1.0"
+  - name: axiom-workers
+    newName: registry.example.com/axiom-workers
+    newTag: "0.1.0"

@@ -1,0 +1,46 @@
+{{- if .Values.database.embedded.enabled }}
+# Evaluation-grade single-instance PostgreSQL. Use a managed or operator-run database in production.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "axiom.fullname" . }}-postgres
+  labels: {{- include "axiom.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: postgres }
+  ports: [{ port: 5432 }]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "axiom.fullname" . }}-postgres
+  labels: {{- include "axiom.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "axiom.fullname" . }}-postgres
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: postgres }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: postgres }
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.database.embedded.image }}
+          env:
+            - { name: POSTGRES_USER, value: axiom }
+            - { name: POSTGRES_DB, value: axiom }
+            - { name: POSTGRES_PASSWORD, value: {{ .Values.database.embedded.password | quote }} }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          ports: [{ containerPort: 5432 }]
+          readinessProbe: { exec: { command: [pg_isready, -U, axiom] }, periodSeconds: 5 }
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with .Values.database.embedded.storageClassName }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources: { requests: { storage: {{ .Values.database.embedded.storage }} } }
+{{- end }}

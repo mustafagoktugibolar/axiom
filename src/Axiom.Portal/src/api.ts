@@ -19,9 +19,7 @@ export interface GovernanceDetail {
   incomingRelations: { kind: string; targetId: string }[];
 }
 
-const TOKEN_KEY = 'axiom.token';
-export const getToken = (): string => { try { return sessionStorage.getItem(TOKEN_KEY) ?? ''; } catch { return ''; } };
-export const setToken = (t: string): void => { try { sessionStorage.setItem(TOKEN_KEY, t); } catch { /* storage unavailable */ } };
+import { getToken } from './auth';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -35,7 +33,7 @@ export async function get<T>(path: string, params: Record<string, string | numbe
   if (!res.ok) {
     let detail = res.statusText;
     try { const p = await res.json(); detail = p.detail ?? p.title ?? detail; } catch { /* non-JSON error body */ }
-    throw new ApiError(res.status, res.status === 401 ? 'Not signed in or token rejected.' : detail);
+    throw new ApiError(res.status, res.status === 401 ? 'Your session expired or you are not signed in.' : detail);
   }
   return (await res.json()) as T;
 }

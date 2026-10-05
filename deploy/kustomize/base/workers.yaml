@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: axiom-workers
+  labels: { app.kubernetes.io/component: workers }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: axiom, app.kubernetes.io/component: workers }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: axiom, app.kubernetes.io/component: workers }
+    spec:
+      serviceAccountName: axiom
+      securityContext: { runAsNonRoot: true, runAsUser: 1654, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: workers
+          image: axiom-workers
+          env:
+            - name: ConnectionStrings__Axiom
+              valueFrom: { secretKeyRef: { name: axiom-secrets, key: connection-string } }
+          envFrom:
+            - configMapRef: { name: axiom-config }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 512Mi }
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]

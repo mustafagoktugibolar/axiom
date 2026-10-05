@@ -11,6 +11,7 @@ using Axiom.Infrastructure.Catalog;
 using Axiom.Infrastructure.Governance;
 using Axiom.Infrastructure.Scm;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -70,6 +71,15 @@ builder.Services.AddRateLimiter(limiter =>
 
 var app = builder.Build();
 
+// `--migrate` applies pending EF migrations and exits. Deployments run it once as a hook Job before the
+// new version rolls out, so replicas never race to migrate at startup.
+if (args.Contains("--migrate", StringComparer.Ordinal))
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    await migrationScope.ServiceProvider.GetRequiredService<Axiom.Infrastructure.Persistence.AxiomDbContext>().Database.MigrateAsync();
+    return;
+}
+
 app.UseExceptionHandler();
 
 // The portal is a static SPA built from src/Axiom.Portal. It is served same-origin only when a build
@@ -96,6 +106,7 @@ app.MapGovernanceEndpoints();
 app.MapExceptionEndpoints();
 app.MapMcp("/mcp");
 app.MapAuthMetadata();
+app.MapPortalAuth(app.Environment);
 
 await app.RunAsync();
 
