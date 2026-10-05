@@ -134,3 +134,25 @@ export interface GraphData {
   edges: { from: string; relation: string; to: string; fact: boolean }[];
 }
 export const getGraph = (focus?: string) => get<GraphData>('/v1/graph', { focus, depth: 3, maxNodes: 120 });
+
+// ---- onboarding ----
+export interface SourceStatus {
+  configured: boolean;
+  source?: { repositoryUrl: string; branch: string; rootPath: string };
+  snapshot?: { snapshotId: string; sourceCommit: string; publishedAt: string; recordCount: number } | null;
+  head?: { sha: string | null; committedAt: string | null; error: string | null };
+}
+export const getSource = () => get<SourceStatus>('/v1/admin/governance-source');
+export async function setSource(b: { repositoryUrl: string; branch: string; rootPath: string }): Promise<SourceStatus> {
+  const res = await fetch('/v1/admin/governance-source', {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(b),
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try { const p = await res.json(); detail = p.error?.message ?? p.detail ?? p.title ?? detail; } catch { /* non-JSON error body */ }
+    throw new ApiError(res.status, detail);
+  }
+  return (await res.json()) as SourceStatus;
+}

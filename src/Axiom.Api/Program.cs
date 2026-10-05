@@ -104,6 +104,7 @@ app.MapOpenApi().AllowAnonymous();
 app.MapEvaluationEndpoints();
 app.MapGovernanceEndpoints();
 app.MapGraphEndpoints();
+app.MapSourceEndpoints();
 app.MapExceptionEndpoints();
 app.MapMcp("/mcp");
 app.MapAuthMetadata();

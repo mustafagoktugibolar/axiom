@@ -8,11 +8,12 @@ import Evaluations from './views/Evaluations.vue';
 import Reviews from './views/Reviews.vue';
 import Exceptions from './views/Exceptions.vue';
 import Graph from './views/Graph.vue';
+import Setup from './views/Setup.vue';
 
-type View = 'start' | 'explorer' | 'evaluations' | 'reviews' | 'exceptions' | 'graph';
+type View = 'start' | 'explorer' | 'evaluations' | 'reviews' | 'exceptions' | 'graph' | 'setup';
 const tabs: { id: View; label: string }[] = [
   { id: 'start', label: 'Get started' }, { id: 'explorer', label: 'Governance' }, { id: 'evaluations', label: 'Evaluations' },
-  { id: 'reviews', label: 'Review queue' }, { id: 'exceptions', label: 'Exceptions' }, { id: 'graph', label: 'System graph' },
+  { id: 'reviews', label: 'Review queue' }, { id: 'exceptions', label: 'Exceptions' }, { id: 'graph', label: 'System graph' }, { id: 'setup', label: 'Set up' },
 ];
 const view = ref<View>('start');
 const selectedRecord = ref<string | null>(null);
@@ -69,6 +70,7 @@ function logout() { signOut(); signedIn.value = false; go('start'); }
     <Evaluations v-else-if="view === 'evaluations'" :key="selectedEvaluation ?? 'list'" :initial-id="selectedEvaluation" @open="openRecord" />
     <Reviews v-else-if="view === 'reviews'" @open-evaluation="openEvaluation" />
     <Exceptions v-else-if="view === 'exceptions'" />
-    <Graph v-else />
+    <Graph v-else-if="view === 'graph'" />
+    <Setup v-else />
   </main>
 </template>

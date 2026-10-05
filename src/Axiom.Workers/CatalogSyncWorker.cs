@@ -10,7 +10,7 @@ public sealed class CatalogSyncOptions
 
     public bool Enabled { get; set; } = true;
 
-    public TimeSpan Interval { get; set; } = TimeSpan.FromMinutes(5);
+    public TimeSpan Interval { get; set; } = TimeSpan.FromMinutes(1);
 
     /// <summary>
     /// Git repositories whose catalog manifests (<c>.axiom/catalog.yaml</c>, <c>catalog-info.yaml</c>) feed
@@ -36,15 +36,15 @@ public sealed partial class CatalogSyncWorker(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var settings = options.Value;
-        if (!settings.Enabled || settings.Sources.Count == 0)
+        if (!settings.Enabled)
         {
             return;
         }
 
-        using var timer = new PeriodicTimer(settings.Interval > TimeSpan.Zero ? settings.Interval : TimeSpan.FromMinutes(5), time);
+        using var timer = new PeriodicTimer(settings.Interval > TimeSpan.Zero ? settings.Interval : TimeSpan.FromMinutes(1), time);
         do
         {
-            foreach (var seed in settings.Sources)
+            foreach (var seed in await SourcesAsync(settings, stoppingToken))
             {
                 try
                 {
@@ -61,6 +61,35 @@ public sealed partial class CatalogSyncWorker(
             }
         }
         while (await WaitAsync(timer, stoppingToken));
+    }
+
+    /// <summary>
+    /// Configured sources plus every registered governance repository: the organization's governance
+    /// repository is also where its <c>.axiom/catalog.yaml</c> lives, so registering it onboards both.
+    /// </summary>
+    private async Task<IReadOnlyList<GovernanceSourceSeed>> SourcesAsync(CatalogSyncOptions settings, CancellationToken cancellationToken)
+    {
+        var all = settings.Sources.ToList();
+        try
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            if (await scope.ServiceProvider.GetRequiredService<ISchemaGate>().IsReadyAsync(cancellationToken))
+            {
+                foreach (var registered in await scope.ServiceProvider.GetRequiredService<IGovernanceSourceRegistry>().ListAsync(cancellationToken))
+                {
+                    if (!all.Any(s => s.OrganizationId == registered.OrganizationId && s.RepositoryUrl == registered.RepositoryUrl && s.Branch == registered.Branch))
+                    {
+                        all.Add(new GovernanceSourceSeed { OrganizationId = registered.OrganizationId, RepositoryUrl = registered.RepositoryUrl, Branch = registered.Branch, RootPath = string.Empty });
+                    }
+                }
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogFailed(ex, "(registry)", "(registered sources)");
+        }
+
+        return all;
     }
 
     private static async Task<bool> WaitAsync(PeriodicTimer timer, CancellationToken cancellationToken)

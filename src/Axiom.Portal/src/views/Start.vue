@@ -72,6 +72,7 @@ const mcpConfig = JSON.stringify({ mcpServers: { axiom: { type: 'http', url: mcp
       <p class="muted">If this stays empty, check the worker log: <code>kubectl -n axiom logs deploy/axiom-workers</code></p>
     </template>
     <button @click="refresh">Check again</button>
+    <p class="muted">Using your own governance repository? Connect it in <strong>Set up</strong>.</p>
   </section>
 
   <section aria-labelledby="s2">
