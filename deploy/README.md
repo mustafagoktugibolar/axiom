@@ -35,8 +35,8 @@ Production (OIDC, external Postgres):
       --set secrets.existingSecret=axiom-secrets \
       --set ingress.enabled=true --set ingress.host=axiom.example.com
 
-The existing Secret needs the key `connection-string`. Migrations run as a Helm hook Job
-(`post-install,pre-upgrade`) using the API image with `--migrate`.
+The existing Secret needs the key `connection-string`. Migrations run in an init container of every API pod
+(the API image with `--migrate`); EF's migration lock serializes replicas, so scaling and rolling updates are safe.
 
 ## Governance source (seed and sync)
 
@@ -61,7 +61,6 @@ to the Secret. Locally the same keys work as environment variables for `dotnet r
     kubectl kustomize deploy/kustomize/overlays/dev  | kubectl apply -f -   # evaluation
     kubectl kustomize deploy/kustomize/overlays/prod | kubectl apply -f -   # edit hosts/images/IdP first
 
-Delete the previous migration Job before re-applying: `kubectl -n axiom delete job axiom-migrate --ignore-not-found`.
 
 ## Identity provider (production)
 

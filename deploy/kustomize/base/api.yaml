@@ -13,6 +13,18 @@ spec:
     spec:
       serviceAccountName: axiom
       securityContext: { runAsNonRoot: true, runAsUser: 1654, seccompProfile: { type: RuntimeDefault } }
+      # Applies pending EF migrations before the API starts; concurrent replicas are serialized by EF's lock.
+      initContainers:
+        - name: migrate
+          image: axiom-api
+          args: ["--migrate"]
+          env:
+            - name: ConnectionStrings__Axiom
+              valueFrom: { secretKeyRef: { name: axiom-secrets, key: connection-string } }
+          envFrom:
+            - configMapRef: { name: axiom-config }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
       containers:
         - name: api
           image: axiom-api

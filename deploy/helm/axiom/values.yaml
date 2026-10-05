@@ -86,7 +86,7 @@ ingress:
     enabled: false
     secretName: ""
 
-# Applies EF migrations as a Helm hook Job before install/upgrade.
+# Applies EF migrations in an init container of every API pod (serialized by EF's migration lock).
 migrations:
   enabled: true
 

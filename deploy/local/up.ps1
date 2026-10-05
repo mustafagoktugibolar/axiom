@@ -29,14 +29,11 @@ if (-not $SkipBuild) {
 }
 
 Write-Host '==> Deploying to namespace axiom'
-# A Job pod template is immutable; remove the previous migration run before re-applying.
-kubectl -n axiom delete job axiom-migrate --ignore-not-found | Out-Null
 kubectl apply -k deploy/kustomize/overlays/local
 if ($LASTEXITCODE) { throw 'kubectl apply failed' }
 
-Write-Host '==> Waiting for the database, migration and API'
+Write-Host '==> Waiting for the database and the API (its init container applies the migrations)'
 kubectl -n axiom rollout status statefulset/axiom-postgres --timeout=180s
-kubectl -n axiom wait --for=condition=complete job/axiom-migrate --timeout=240s
 kubectl -n axiom rollout status deploy/axiom-api --timeout=180s
 kubectl -n axiom rollout status deploy/axiom-workers --timeout=180s
 

@@ -10,7 +10,6 @@ resources:
   - configmap.yaml
   - api.yaml
   - workers.yaml
-  - migrate-job.yaml
 images:
   - name: axiom-api
     newName: axiom-api

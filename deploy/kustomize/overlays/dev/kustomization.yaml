@@ -23,8 +23,8 @@ patches:
     path: dev-env.yaml
   - target: { kind: Deployment, name: axiom-workers }
     path: dev-env.yaml
-  - target: { kind: Job, name: axiom-migrate }
-    path: dev-env-job.yaml
+  - target: { kind: Deployment, name: axiom-api }
+    path: dev-env-init.yaml
   - target: { kind: Deployment, name: axiom-api }
     patch: |-
       - op: replace

@@ -26,6 +26,18 @@ spec:
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext: { runAsNonRoot: true, runAsUser: 1654, seccompProfile: { type: RuntimeDefault } }
+      {{- if .Values.migrations.enabled }}
+      # Applies pending EF migrations before the API starts. Concurrent replicas are serialized by EF's
+      # migration lock, so scaling out or rolling is safe, and no ordering between hooks and readiness exists.
+      initContainers:
+        - name: migrate
+          image: {{ include "axiom.image" (dict "root" . "name" .Values.image.api) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--migrate"]
+          {{- include "axiom.env" . | nindent 10 }}
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      {{- end }}
       containers:
         - name: api
           image: {{ include "axiom.image" (dict "root" . "name" .Values.image.api) }}
