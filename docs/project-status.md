@@ -90,6 +90,8 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Portal sign-in: OIDC authorization code + PKCE (`/v1/auth/config` advertises authority/client), Development-only `/v1/auth/dev-login`; no pasted tokens | done | 2 integration tests written (need Docker; not run in this session) |
 | Deployment: Dockerfile (api incl. portal, workers), Helm chart `deploy/helm/axiom`, Kustomize base + dev/prod overlays, `--migrate` mode for the migration Job | done | `helm lint`/`template` and `kubectl kustomize` render clean; images and a live cluster install not tested |
 | Governance seed + sync: `GovernanceSyncWorker` in Axiom.Workers registers configured sources (`Axiom:Workers:GovernanceSync:Sources`) and re-syncs every interval; Helm `governance.sources/credentials`, Kustomize overlay patches | done. NOTE: before this the Workers host ran no jobs at all (no sync, no outbox dispatch, no health jobs) | 4 unit tests (seed, per-source failure isolation, disabled, interval); chart renders |
+| Local trial on Docker Desktop Kubernetes: `deploy/local/up.ps1`/`down.ps1`, Kustomize `local` overlay, demo governance + catalog repo, `CatalogSyncWorker` (manifests -> System Graph), portal "Get started" page (status, preflight, MCP config) | done; deployed and exercised for real (sign-in, 2 records, catalog, preflight) | 52 integration + 371 unit tests pass |
+| Readiness now checks migrations (`SchemaHealthCheck`), workers wait for the schema (`ISchemaGate`), EF command log noise off | done | found by running the stack: pgvector image missing, overlay resources landing in `default` namespace |
 | Everything else (semantic, onboarding, hardening) | not started; semantic is post-MVP per the PRD | - |
 
 ## How to resume (new terminal session)

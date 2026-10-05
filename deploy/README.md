@@ -5,6 +5,17 @@ Images (build from the repository root; the `api` image embeds the portal):
     docker build -f deploy/docker/Dockerfile --target api     -t <registry>/axiom-api:0.1.0 .
     docker build -f deploy/docker/Dockerfile --target workers -t <registry>/axiom-workers:0.1.0 .
 
+## Local (Docker Desktop Kubernetes)
+
+    powershell -File deploy/local/up.ps1      # builds both images, deploys with demo data, port-forwards
+    # open http://localhost:8080 -> Sign in -> "Get started"
+    powershell -File deploy/local/down.ps1    # removes the axiom namespace (and the database volume)
+
+Needs Docker Desktop with Kubernetes enabled and `kubectl`; no Helm. It uses `deploy/kustomize/overlays/local`:
+in-cluster Postgres (pgvector image), the built-in dev login, and the demo governance repository
+(`deploy/local/demo-repo`, baked into the workers image) registered as organization `dev`. Re-run `up.ps1`
+after code changes; `-SkipBuild` redeploys without rebuilding.
+
 ## Helm
 
 Local evaluation (embedded Postgres, built-in dev login; never on a shared cluster):
