@@ -69,3 +69,5 @@ dist/
 
 # Local agent worktrees
 .claude/
+
+!integrations/**/.claude/

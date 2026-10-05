@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Axiom: call governance.preflight_change before designing or editing; stop on REQUIRE_REVIEW, DENY or error (see AGENTS.md).'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "axiom-cli evaluate-diff --repository \"$AXIOM_REPOSITORY\" --base \"$(git merge-base HEAD origin/main)\" --head \"$(git rev-parse HEAD)\" --format text || { echo 'Axiom: diff validation did not pass; see output.' >&2; exit 2; }"
+          }
+        ]
+      }
+    ]
+  }
+}
