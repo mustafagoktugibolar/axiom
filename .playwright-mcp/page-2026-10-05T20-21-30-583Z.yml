@@ -1,0 +1,63 @@
+- generic [ref=f1e2]:
+  - banner [ref=f1e3]:
+    - strong [ref=f1e4]: Axiom
+    - navigation "Primary" [ref=f1e52]:
+      - button "Get started" [ref=f1e53] [cursor=pointer]
+      - button "Governance" [ref=f1e54] [cursor=pointer]
+      - button "Evaluations" [ref=f1e55] [cursor=pointer]
+      - button "Review queue" [ref=f1e56] [cursor=pointer]
+      - button "Exceptions" [ref=f1e57] [cursor=pointer]
+      - button "System graph" [ref=f1e58] [cursor=pointer]
+    - generic [ref=f1e59]: reviewer
+    - button "Sign out" [ref=f1e60] [cursor=pointer]
+  - main [ref=f1e61]:
+    - heading "Exceptions" [level=1] [ref=f1e92]
+    - paragraph [ref=f1e93]: "An exception waives a governance rule for a limited scope and time. Approval alone waives nothing: a maintainer must merge the generated record into the governance repository."
+    - heading "Requests" [level=2] [ref=f1e94]
+    - generic [ref=f1e95]:
+      - paragraph [ref=f1e96]:
+        - button [active] [ref=f1e97] [cursor=pointer]:
+          - strong [ref=f1e98]: Temporary role routing in the gateway
+        - text: Pending
+      - paragraph [ref=f1e99]: exr_3faa86324020b7b677116da8 · waives ARCH-001 · by dev-user · expires 11/4/2026 · approvers platform-architecture
+      - paragraph [ref=f1e119]: Clients migrate to the Homepage Service next quarter; until then the gateway reads roles directly.
+      - paragraph [ref=f1e120]: Awaiting a decision from the owners of the target records.
+      - paragraph [ref=f1e121]:
+        - text: Draft record for
+        - code [ref=f1e122]: governance/exceptions/EXC-REQ-140082.yaml
+        - text: ":"
+      - generic [ref=f1e123]: "schemaVersion: axiom.io/v1 kind: Exception metadata: id: EXC-REQ-140082 title: \"Temporary role routing in the gateway\" owners: [\"dev-user\"] spec: status: proposed targets: [\"ARCH-001\"] scope: paths: [\"src/Gateway/Routing/**\"] repositories: [\"demo-gateway\"] rationale: \"Clients migrate to the Homepage Service next quarter; until then the gateway reads roles directly.\" startsAt: 2026-10-05T20:19:57Z expiresAt: 2026-11-04T00:00:00Z approvers: [\"platform-architecture\"] trackingIssue: \"GUI-912\" compensatingControls: - \"No new callers may use the role router.\""
+      - generic [ref=f1e124]:
+        - textbox "Comment" [ref=f1e125]:
+          - /placeholder: Comment (required)
+        - button "Approve" [ref=f1e126] [cursor=pointer]
+        - button "Reject" [ref=f1e127] [cursor=pointer]
+      - paragraph [ref=f1e128]: "The requester cannot decide their own request: sign in as another user to approve."
+    - heading "Request an exception" [level=2] [ref=f1e100]
+    - generic [ref=f1e101]:
+      - generic [ref=f1e102]:
+        - text: Rule to waive (record ID)
+        - textbox "Rule to waive (record ID)" [ref=f1e103]: ARCH-001
+      - generic [ref=f1e104]:
+        - text: Repository
+        - textbox "Repository" [ref=f1e105]: demo-gateway
+      - generic [ref=f1e106]:
+        - text: Paths (comma separated, optional)
+        - textbox "Paths (comma separated, optional)" [ref=f1e107]: src/Gateway/Routing/**
+      - generic [ref=f1e108]:
+        - text: Title
+        - textbox "Title" [ref=f1e109]
+      - generic [ref=f1e110]:
+        - text: Why is this needed?
+        - textbox "Why is this needed?" [ref=f1e111]
+      - generic [ref=f1e112]:
+        - text: Expires
+        - textbox "Expires" [ref=f1e113]: 2026-11-04
+      - generic [ref=f1e114]:
+        - text: Tracking issue
+        - textbox "Tracking issue" [ref=f1e115]:
+          - /placeholder: e.g. GUI-912
+      - generic [ref=f1e116]:
+        - text: Compensating controls (one per line)
+        - textbox "Compensating controls (one per line)" [ref=f1e117]
+      - button "Send request" [ref=f1e118] [cursor=pointer]

@@ -42,9 +42,9 @@ async function discover(authority: string): Promise<{ authorization_endpoint: st
   return res.json();
 }
 
-export async function signIn(config: AuthConfig): Promise<void> {
+export async function signIn(config: AuthConfig, name?: string): Promise<void> {
   if (config.mode === 'dev') {
-    const res = await fetch('/v1/auth/dev-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const res = await fetch('/v1/auth/dev-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(name ? { name } : {}) });
     if (!res.ok) throw new Error('Development sign-in is not available.');
     const body = await res.json() as { accessToken: string; expiresIn: number };
     saveToken(body.accessToken, body.expiresIn);
@@ -88,3 +88,15 @@ export async function completeSignIn(): Promise<boolean> {
   saveToken(body.access_token, body.expires_in);
   return true;
 }
+
+/** Subject of the current token, for display only (the API validates the token; this is never trusted). */
+export function whoAmI(): string {
+  try {
+    const payload = getToken().split('.')[1];
+    if (!payload) return '';
+    const claims = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as { name?: string; sub?: string };
+    return claims.name ?? claims.sub ?? '';
+  } catch { return ''; }
+}
+
+export const accessToken = (): string => getToken();

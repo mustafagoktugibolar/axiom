@@ -1,0 +1,66 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - strong [ref=e4]: Axiom
+    - navigation "Primary" [ref=e12]:
+      - button "Get started" [ref=e13] [cursor=pointer]
+      - button "Governance" [ref=e14] [cursor=pointer]
+      - button "Evaluations" [ref=e15] [cursor=pointer]
+      - button "Review queue" [ref=e16] [cursor=pointer]
+      - button "Exceptions" [ref=e17] [cursor=pointer]
+      - button "System graph" [ref=e18] [cursor=pointer]
+    - generic [ref=e19]: dev-user
+    - button "Sign out" [ref=e20] [cursor=pointer]
+  - main [ref=e21]:
+    - heading "Get started" [level=1] [ref=e22]
+    - paragraph [ref=e23]: Axiom checks changes against your governance records (decisions, standards, exceptions) before and after code is written. Try it in four steps.
+    - region [ref=e24]:
+      - heading "1. Governance is loaded" [level=2] [ref=e25]
+      - paragraph [ref=e26]: 2 governance record(s) are published. Browse them in the Governance tab, or see how they relate in the System graph.
+      - button "Check again" [ref=e27] [cursor=pointer]
+    - region [ref=e28]:
+      - 'heading "2. Preflight: what applies before I start?" [level=2] [ref=e29]'
+      - paragraph [ref=e30]:
+        - text: "This is what an agent does before editing: Axiom resolves which governance applies to the repository and the change, and says what must happen next. The demo covers the repository"
+        - code [ref=e31]: demo-gateway
+        - text: .
+      - generic [ref=e32]:
+        - textbox "Repository" [ref=e33]: demo-gateway
+        - textbox "Task" [ref=e34]:
+          - /placeholder: What are you changing?
+          - text: Add per-user landing page routing to the gateway
+        - textbox "Paths" [ref=e35]:
+          - /placeholder: Paths, comma separated
+          - text: src/Routing/**
+        - button "Run preflight" [ref=e36] [cursor=pointer]
+    - region [ref=e37]:
+      - heading "3. Check a pull request" [level=2] [ref=e38]
+      - paragraph [ref=e39]:
+        - text: "The demo code repository has a branch with one change:"
+        - emphasis [ref=e40]: Route landing page by user role
+        - text: . It makes the Gateway query the database directly, which decision ARCH-001 forbids. Axiom checks the actual code, not the plan.
+      - button "Validate this change" [ref=e41] [cursor=pointer]
+      - article [ref=e51]:
+        - paragraph [ref=e52]:
+          - text: "Result:"
+          - strong [ref=e53]: Blocked
+        - generic [ref=e54]:
+          - paragraph [ref=e55]:
+            - strong [ref=e56]: BLOCK
+            - text: "'src/Gateway/Routing/RoleRouter.cs' references 'Npgsql', which is a forbidden import (Npgsql). Evidence: using: Npgsql"
+          - paragraph [ref=e57]: "What to do: Change the code to comply with ARCH-001 (Gateway must not contain business routing logic), or request an exception from platform-architecture."
+        - 'button "Open the evaluation: review it, overturn a finding, or request an exception" [ref=e58] [cursor=pointer]'
+    - region [ref=e42]:
+      - heading "4. Connect your agent" [level=2] [ref=e43]
+      - paragraph [ref=e44]:
+        - text: Axiom speaks MCP at
+        - code [ref=e45]: http://localhost:8080/mcp
+        - text: . Put this in your agent MCP configuration and export
+        - code [ref=e46]: AXIOM_TOKEN
+        - text: (an access token for this deployment), then copy
+        - code [ref=e47]: integrations/agents-md/AGENTS.md
+        - text: into your repository.
+      - generic [ref=e48]: "{ \"mcpServers\": { \"axiom\": { \"type\": \"http\", \"url\": \"http://localhost:8080/mcp\", \"headers\": { \"Authorization\": \"Bearer ${AXIOM_TOKEN}\" } } } }"
+      - paragraph [ref=e49]:
+        - text: Starter packs for Kiro and Claude Code live in the
+        - code [ref=e50]: integrations/
+        - text: folder of the Axiom repository.

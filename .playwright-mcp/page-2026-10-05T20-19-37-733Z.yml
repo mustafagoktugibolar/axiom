@@ -1,0 +1,28 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - strong [ref=e4]: Axiom
+    - navigation "Primary" [ref=e12]:
+      - button "Get started" [ref=e13] [cursor=pointer]
+      - button "Governance" [ref=e14] [cursor=pointer]
+      - button "Evaluations" [ref=e15] [cursor=pointer]
+      - button "Review queue" [ref=e16] [cursor=pointer]
+      - button "Exceptions" [ref=e17] [cursor=pointer]
+      - button "System graph" [active] [ref=e18] [cursor=pointer]
+    - generic [ref=e19]: dev-user
+    - button "Sign out" [ref=e20] [cursor=pointer]
+  - main [ref=e21]:
+    - heading "System graph" [level=1] [ref=e103]
+    - paragraph [ref=e104]: How domains, systems, components and repositories relate. Solid lines are declared facts, dashed ones are inferred. Click a box for details.
+    - generic [ref=e105]:
+      - textbox "Focus" [ref=e106]:
+        - /placeholder: Focus on an entity, e.g. component:gui-platform/api-gateway
+      - button "Show" [ref=e107] [cursor=pointer]
+    - img "System graph" [ref=e109]:
+      - generic [ref=e110]: domain
+      - generic [ref=e111]: system
+      - generic [ref=e112]: component
+      - generic [ref=e113]: repository
+      - button "GUI" [ref=e114] [cursor=pointer]
+      - button "GUI Platform" [ref=e117] [cursor=pointer]
+      - button "API Gateway" [ref=e120] [cursor=pointer]
+      - button "demo-gateway" [ref=e123] [cursor=pointer]

@@ -1,0 +1,11 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - strong [ref=e4]: Axiom
+  - main [ref=e5]:
+    - heading "Sign in" [level=1] [ref=e6]
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - text: Sign in as
+        - textbox "User name" [ref=e9]: dev-user
+      - button "Sign in" [ref=e10] [cursor=pointer]
+    - paragraph [ref=e11]: "Development mode: no identity provider is involved. Use two different names to try approvals (a requester cannot approve their own request)."

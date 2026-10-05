@@ -1,0 +1,68 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - strong [ref=e4]: Axiom
+    - navigation "Primary" [ref=e12]:
+      - button "Get started" [ref=e13] [cursor=pointer]
+      - button "Governance" [ref=e14] [cursor=pointer]
+      - button "Evaluations" [ref=e15] [cursor=pointer]
+      - button "Review queue" [ref=e16] [cursor=pointer]
+      - button "Exceptions" [ref=e17] [cursor=pointer]
+      - button "System graph" [ref=e18] [cursor=pointer]
+    - generic [ref=e19]: dev-user
+    - button "Sign out" [ref=e20] [cursor=pointer]
+  - main [ref=e21]:
+    - button "Back to evaluations" [ref=e59] [cursor=pointer]
+    - article [ref=e60]:
+      - heading "DIFF check Blocked" [level=1] [ref=e61]
+      - paragraph [ref=e62]:
+        - text: repo:demo-gateway @
+        - code [ref=e63]: 4a81c9bd0d
+        - text: "· by dev-user · 10/5/2026, 11:13:56 PM · clearance:"
+        - strong [ref=e64]: Blocked
+      - generic [ref=e65]:
+        - heading "Findings" [level=2] [ref=e66]
+        - generic [ref=e67]:
+          - paragraph [ref=e68]:
+            - strong [ref=e69]: BLOCK
+            - text: POLICY_VIOLATION
+            - generic [ref=e70]:
+              - text: ·
+              - code [ref=e71]: src/Gateway/Routing/RoleRouter.cs:1
+          - paragraph [ref=e72]: "'src/Gateway/Routing/RoleRouter.cs' references 'Npgsql', which is a forbidden import (Npgsql). Evidence: using: Npgsql"
+          - paragraph [ref=e73]:
+            - text: "Governance:"
+            - button "ARCH-001" [ref=e74] [cursor=pointer]
+          - paragraph [ref=e75]: "What to do: Change the code to comply with ARCH-001 (Gateway must not contain business routing logic), or request an exception from platform-architecture."
+          - button "Overturn this finding (reviewer)" [ref=e76] [cursor=pointer]
+      - generic [ref=e77]:
+        - heading "Required next actions" [level=2] [ref=e78]
+        - list [ref=e79]:
+          - listitem [ref=e80]: Change the code to comply with ARCH-001 (Gateway must not contain business routing logic), or request an exception from platform-architecture.
+      - generic [ref=e81]:
+        - heading "Governance that applied" [level=2] [ref=e82]
+        - list [ref=e83]:
+          - listitem [ref=e84]:
+            - button "ARCH-001" [ref=e85] [cursor=pointer]
+            - text: (Decision, required)
+          - listitem [ref=e86]:
+            - button "ARCH-002" [ref=e87] [cursor=pointer]
+            - text: (Decision, recommended)
+      - generic [ref=e88]:
+        - heading "Review" [level=2] [ref=e89]
+        - paragraph [ref=e90]: No review decisions yet.
+        - generic [ref=e91]:
+          - textbox "Comment" [ref=e92]:
+            - /placeholder: Comment (required)
+          - button "Approve" [ref=e93] [cursor=pointer]
+          - button "Reject" [ref=e94] [cursor=pointer]
+      - generic [ref=e95]:
+        - heading "Receipt" [level=2] [ref=e96]
+        - paragraph [ref=e97]:
+          - code [ref=e98]: rc_fb72decd57021e6bc43e5567
+          - text: issued 10/5/2026, 11:13:56 PM ·
+          - strong [ref=e99]: verified
+        - paragraph [ref=e100]:
+          - text: Digest
+          - code [ref=e101]: fb72decd57021e6bc43e5567...
+          - text: chained to
+          - code [ref=e102]: 38621306e385e24edc543901...

@@ -31,6 +31,9 @@ public sealed class AxiomAuthOptions
 
     public string DevelopmentIssuer { get; set; } = "https://axiom.localhost";
 
+    /// <summary>Teams every dev-login user belongs to (Development only), so approval flows can be tried locally.</summary>
+    public string[] DevelopmentGroups { get; set; } = ["platform-architecture", "gui-platform"];
+
     /// <summary>Public OIDC client (authorization code + PKCE) the portal signs in with. No secret: it is a browser app.</summary>
     public string? PortalClientId { get; set; }
 

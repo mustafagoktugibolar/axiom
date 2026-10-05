@@ -1,0 +1,58 @@
+- generic [ref=f1e2]:
+  - banner [ref=f1e3]:
+    - strong [ref=f1e4]: Axiom
+    - navigation "Primary" [ref=f1e5]:
+      - button "Get started" [ref=f1e6] [cursor=pointer]
+      - button "Governance" [ref=f1e7] [cursor=pointer]
+      - button "Evaluations" [ref=f1e8] [cursor=pointer]
+      - button "Review queue" [ref=f1e9] [cursor=pointer]
+      - button "Exceptions" [ref=f1e10] [cursor=pointer]
+      - button "System graph" [ref=f1e11] [cursor=pointer]
+    - generic [ref=f1e12]: dev-user
+    - button "Sign out" [ref=f1e13] [cursor=pointer]
+  - main [ref=f1e14]:
+    - heading "Get started" [level=1] [ref=f1e15]
+    - paragraph [ref=f1e16]: Axiom checks changes against your governance records (decisions, standards, exceptions) before and after code is written. Try it in four steps.
+    - region [ref=f1e17]:
+      - heading "1. Governance is loaded" [level=2] [ref=f1e18]
+      - paragraph [ref=f1e19]: Checking...
+      - button "Check again" [ref=f1e20] [cursor=pointer]
+    - region [ref=f1e21]:
+      - 'heading "2. Preflight: what applies before I start?" [level=2] [ref=f1e22]'
+      - paragraph [ref=f1e23]:
+        - text: "This is what an agent does before editing: Axiom resolves which governance applies to the repository and the change, and says what must happen next. The demo covers the repository"
+        - code [ref=f1e24]: demo-gateway
+        - text: .
+      - generic [ref=f1e25]:
+        - textbox "Repository" [ref=f1e26]: demo-gateway
+        - textbox "Task" [ref=f1e27]:
+          - /placeholder: What are you changing?
+          - text: Add per-user landing page routing to the gateway
+        - textbox "Paths" [ref=f1e28]:
+          - /placeholder: Paths, comma separated
+          - text: src/Routing/**
+        - button "Run preflight" [ref=f1e29] [cursor=pointer]
+    - region [ref=f1e30]:
+      - heading "3. Check a pull request" [level=2] [ref=f1e31]
+      - paragraph [ref=f1e32]:
+        - text: "In your own setup this runs from CI on every pull request:"
+        - code [ref=f1e33]: axiom-cli evaluate-pr
+        - text: (see
+        - code [ref=f1e34]: docs/operations/branch-policy.md
+        - text: ). The bundled demo change is only available in the local trial.
+    - region [ref=f1e35]:
+      - heading "4. Connect your agent" [level=2] [ref=f1e36]
+      - paragraph [ref=f1e37]:
+        - text: Axiom speaks MCP at
+        - code [ref=f1e38]: http://localhost:8080/mcp
+        - text: . Put this in your agent MCP configuration and export
+        - code [ref=f1e39]: AXIOM_TOKEN
+        - text: (an access token for this deployment), then copy
+        - code [ref=f1e40]: integrations/agents-md/AGENTS.md
+        - text: into your repository.
+      - generic [ref=f1e41]: "{ \"mcpServers\": { \"axiom\": { \"type\": \"http\", \"url\": \"http://localhost:8080/mcp\", \"headers\": { \"Authorization\": \"Bearer ${AXIOM_TOKEN}\" } } } }"
+      - button "Copy my access token" [ref=f1e42] [cursor=pointer]
+      - paragraph [ref=f1e43]:
+        - text: Starter packs for Kiro and Claude Code live in the
+        - code [ref=f1e44]: integrations/
+        - text: folder of the Axiom repository.

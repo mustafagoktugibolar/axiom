@@ -1,0 +1,45 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - strong [ref=e4]: Axiom
+    - navigation "Primary" [ref=e12]:
+      - button "Get started" [ref=e13] [cursor=pointer]
+      - button "Governance" [ref=e14] [cursor=pointer]
+      - button "Evaluations" [ref=e15] [cursor=pointer]
+      - button "Review queue" [ref=e16] [cursor=pointer]
+      - button "Exceptions" [active] [ref=e17] [cursor=pointer]
+      - button "System graph" [ref=e18] [cursor=pointer]
+    - generic [ref=e19]: dev-user
+    - button "Sign out" [ref=e20] [cursor=pointer]
+  - main [ref=e21]:
+    - heading "Exceptions" [level=1] [ref=e126]
+    - paragraph [ref=e127]: "An exception waives a governance rule for a limited scope and time. Approval alone waives nothing: a maintainer must merge the generated record into the governance repository."
+    - heading "Requests" [level=2] [ref=e128]
+    - paragraph [ref=e129]: No exception requests yet.
+    - heading "Request an exception" [level=2] [ref=e130]
+    - generic [ref=e131]:
+      - generic [ref=e132]:
+        - text: Rule to waive (record ID)
+        - textbox "Rule to waive (record ID)" [ref=e133]: ARCH-001
+      - generic [ref=e134]:
+        - text: Repository
+        - textbox "Repository" [ref=e135]: demo-gateway
+      - generic [ref=e136]:
+        - text: Paths (comma separated, optional)
+        - textbox "Paths (comma separated, optional)" [ref=e137]: src/Gateway/Routing/**
+      - generic [ref=e138]:
+        - text: Title
+        - textbox "Title" [ref=e139]
+      - generic [ref=e140]:
+        - text: Why is this needed?
+        - textbox "Why is this needed?" [ref=e141]
+      - generic [ref=e142]:
+        - text: Expires
+        - textbox "Expires" [ref=e143]: 2026-11-04
+      - generic [ref=e144]:
+        - text: Tracking issue
+        - textbox "Tracking issue" [ref=e145]:
+          - /placeholder: e.g. GUI-912
+      - generic [ref=e146]:
+        - text: Compensating controls (one per line)
+        - textbox "Compensating controls (one per line)" [ref=e147]
+      - button "Send request" [ref=e148] [cursor=pointer]

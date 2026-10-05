@@ -48,6 +48,7 @@ internal static class PortalAuthEndpoints
                     new(o.OrganizationClaim, string.IsNullOrWhiteSpace(body?.Organization) ? "dev" : body.Organization.Trim()),
                 };
                 claims.AddRange(roles.Select(r => new Claim(o.RolesClaim, r)));
+                claims.AddRange(o.DevelopmentGroups.Select(g => new Claim(o.TeamsClaim, g)));
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(o.DevelopmentSigningKey));
                 var token = new JwtSecurityToken(
                     o.DevelopmentIssuer, o.Audience, claims, expires: DateTime.UtcNow.Add(DevTokenLifetime),
