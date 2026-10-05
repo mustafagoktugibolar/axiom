@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "axiom": {
+      "url": "https://axiom.example.com/mcp",
+      "headers": { "Authorization": "Bearer ${AXIOM_TOKEN}" },
+      "autoApprove": [
+        "governance.query_decisions",
+        "governance.get_decision",
+        "governance.get_receipt",
+        "governance.explain_finding"
+      ]
+    }
+  }
+}

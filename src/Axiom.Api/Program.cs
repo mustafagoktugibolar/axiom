@@ -71,6 +71,17 @@ builder.Services.AddRateLimiter(limiter =>
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+// The portal is a static SPA built from src/Axiom.Portal. It is served same-origin only when a build
+// directory is configured, so the API stays usable headless and no CORS surface is opened.
+var portalPath = app.Configuration["Axiom:Portal:Path"];
+if (!string.IsNullOrWhiteSpace(portalPath) && Directory.Exists(portalPath))
+{
+    var portalFiles = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Path.GetFullPath(portalPath));
+    app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = portalFiles });
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = portalFiles });
+}
+
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();

@@ -4,7 +4,7 @@ Durable implementation tracker. The backlog itself lives in
 `axiom-engineering-governance-plane/.kiro/specs/axiom/tasks.md`; this file records
 ordering, state, verification, and items needing a human. It does not restate the backlog.
 
-**Last updated:** 2026-10-04
+**Last updated:** 2026-10-05
 
 ## Source of truth
 
@@ -84,7 +84,10 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Phase 9.1-9.3: MCP server at `/mcp` (stateless streamable HTTP, same auth/rate limit as REST), 11 tools, RFC 9728 resource metadata + 401 challenge; REST: `/v1/governance`, `/v1/impact`, `/v1/context/{id}`, `/v1/evaluations/{id}/findings/{code}` | done except `governance.propose_decision` (needs the candidate workflow of Phase 11) | 7 MCP-client integration tests over real HTTP, Git, Postgres |
 | Phase 8.8 CLI `axiom-cli`: `evaluate-pr`, `evaluate-diff`, `preflight`, `receipt`, `validate-governance`; exit codes 0/10/20, 3 = no verdict (fails closed), 2 = usage; text/json/github/azure output; token only from `AXIOM_TOKEN`, only over https | done | 23 unit tests |
 | Exception workflow (R10, R11, ADR-0006): `POST/GET /v1/exceptions/requests`, `POST .../{id}/decision`, MCP `governance.request_exception` / `get_exception_request`. Requests are validated by the same `GovernanceSetValidator` rules that guard Git (exemptable, governing, scope inside target, window <= 180 days, tracking issue), routed to target owners, decided once by someone other than the requester, audited append-only, and yield a draft record (`status: proposed`, `accepted` after approval). Approval waives nothing: only the record merged into the governance repository does | done (Axiom never writes to Git; a maintainer commits the draft). Expiry review (13.7) and `exception.expiring` events not built | 19 unit + 3 end-to-end tests incl. the full request -> approve -> merge -> waived lifecycle |
-| Everything else (semantic, onboarding, portal, deploy, CI, hardening) | not started | - |
+| Harness packs (9.4-9.6): portable `AGENTS.md`, Kiro steering + agent-stop hook + MCP config, Claude Code `CLAUDE.md` + hooks + MCP config (`integrations/`) | done; 9.7-9.9 (Codex, Cursor, Copilot) read `AGENTS.md`, no dedicated packs; 9.10 conformance tests not built | `axiom-cli` flags checked against `--help` |
+| CI (`.github/workflows/ci.yml`): build + test, portal build | done | not yet run on a hosted runner |
+| Basic portal (`src/Axiom.Portal`, Vue 3 + TS): governance search/filter, record detail with revision history and relations, evaluation/receipt lookup, review queue (raw); served same-origin by the API when `Axiom:Portal:Path` is set. Auth is a pasted bearer token (OIDC sign-in not built) | done (MVP-level; 10.3-10.4 graphs, 10.6-10.8 rich views not built) | `npm run build` (vue-tsc + vite) |
+| Everything else (semantic, onboarding, deploy packaging, hardening) | not started; semantic is post-MVP per the PRD | - |
 
 ## How to resume (new terminal session)
 

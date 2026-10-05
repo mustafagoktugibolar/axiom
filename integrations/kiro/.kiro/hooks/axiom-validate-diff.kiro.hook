@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "name": "Axiom: validate diff on task completion",
+  "description": "After an agent execution completes, validate the diff against Axiom governance.",
+  "version": "1",
+  "when": { "type": "agentStop" },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Call governance.validate_diff with the base and head commit SHAs of your changes. If the verdict is REQUIRE_REVIEW or DENY, or the call fails, stop and report it to the user. Do not treat failure as allowed."
+  }
+}
