@@ -9,3 +9,7 @@ data:
   Axiom__Auth__TeamsClaim: groups
   # Set per environment in an overlay:
   #   Axiom__Auth__Authority, Axiom__Auth__PortalClientId, Axiom__PublicBaseUrl
+  Axiom__Workers__GovernanceSync__Enabled: "true"
+  Axiom__Workers__GovernanceSync__Interval: "00:01:00"
+  # Governance sources are set per environment in an overlay (see overlays/*):
+  #   Axiom__Workers__GovernanceSync__Sources__0__OrganizationId / __RepositoryUrl / __Branch / __RootPath

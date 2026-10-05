@@ -19,6 +19,9 @@ spec:
           env:
             - name: ConnectionStrings__Axiom
               valueFrom: { secretKeyRef: { name: axiom-secrets, key: connection-string } }
+            # Token for private governance repositories (host github.com; add one entry per Git host).
+            - name: Axiom__Governance__Credentials__github.com__Token
+              valueFrom: { secretKeyRef: { name: axiom-secrets, key: git-token-github, optional: true } }
           envFrom:
             - configMapRef: { name: axiom-config }
           resources:

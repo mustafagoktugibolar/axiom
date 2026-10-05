@@ -4,6 +4,7 @@ using Axiom.Infrastructure;
 using Axiom.Infrastructure.Catalog;
 using Axiom.Infrastructure.Governance;
 using Axiom.Infrastructure.Scm;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Axiom.Workers;
 
@@ -21,6 +22,10 @@ public static class WorkerComposition
         services.AddCatalogInfrastructure(configuration);
         services.AddScmInfrastructure(configuration);
         services.AddPolicyEngine();
+
+        services.AddOptions<GovernanceSyncOptions>().Bind(configuration.GetSection(GovernanceSyncOptions.SectionName));
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddHostedService<GovernanceSyncWorker>();
         return services;
     }
 }

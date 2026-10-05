@@ -38,6 +38,22 @@ secrets:
   #   connection-string, dev-signing-key (devMode only)
   existingSecret: ""
 
+# Governance Git repositories the workers register at startup and keep in sync (one per organization).
+# URLs must not embed credentials. For private repositories give a token per Git host; it is read from
+# the Secret (secrets.existingSecret or the rendered one) under `secretKey` and sent only to that host.
+governance:
+  sync:
+    enabled: true
+    interval: "00:01:00"
+  sources: []
+  #  - organizationId: acme
+  #    repositoryUrl: https://github.com/acme/governance.git
+  #    branch: main
+  #    rootPath: ""
+  credentials: []
+  #  - host: github.com
+  #    secretKey: git-token-github
+
 # Extra settings rendered into the ConfigMap as environment variables, for example
 #   Axiom__Scm__AllowedHosts__0: github.com
 config: {}

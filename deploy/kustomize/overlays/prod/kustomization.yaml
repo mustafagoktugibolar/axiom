@@ -10,6 +10,17 @@ patches:
   - target: { kind: ConfigMap, name: axiom-config }
     patch: |-
       - op: add
+        path: /data/Axiom__Workers__GovernanceSync__Sources__0__OrganizationId
+        value: acme
+      - op: add
+        path: /data/Axiom__Workers__GovernanceSync__Sources__0__RepositoryUrl
+        value: https://github.com/example/governance.git
+      - op: add
+        path: /data/Axiom__Workers__GovernanceSync__Sources__0__Branch
+        value: main
+  - target: { kind: ConfigMap, name: axiom-config }
+    patch: |-
+      - op: add
         path: /data/Axiom__Auth__Authority
         value: https://idp.example.com/realms/axiom
       - op: add

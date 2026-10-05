@@ -18,3 +18,11 @@ data:
   {{- range $k, $v := .Values.config }}
   {{ $k }}: {{ $v | quote }}
   {{- end }}
+  Axiom__Workers__GovernanceSync__Enabled: {{ .Values.governance.sync.enabled | quote }}
+  Axiom__Workers__GovernanceSync__Interval: {{ .Values.governance.sync.interval | quote }}
+  {{- range $i, $src := .Values.governance.sources }}
+  Axiom__Workers__GovernanceSync__Sources__{{ $i }}__OrganizationId: {{ required "governance.sources[].organizationId is required" $src.organizationId | quote }}
+  Axiom__Workers__GovernanceSync__Sources__{{ $i }}__RepositoryUrl: {{ required "governance.sources[].repositoryUrl is required" $src.repositoryUrl | quote }}
+  Axiom__Workers__GovernanceSync__Sources__{{ $i }}__Branch: {{ default "main" $src.branch | quote }}
+  Axiom__Workers__GovernanceSync__Sources__{{ $i }}__RootPath: {{ default "" $src.rootPath | quote }}
+  {{- end }}

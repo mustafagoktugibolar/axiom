@@ -27,6 +27,24 @@ Production (OIDC, external Postgres):
 The existing Secret needs the key `connection-string`. Migrations run as a Helm hook Job
 (`post-install,pre-upgrade`) using the API image with `--migrate`.
 
+## Governance source (seed and sync)
+
+The workers register the configured governance repositories at startup and then re-sync every
+`governance.sync.interval` (default one minute); a rejected commit leaves the previous snapshot in force.
+Without a source the registry stays empty.
+
+    # values.yaml (or --set)
+    governance:
+      sources:
+        - { organizationId: acme, repositoryUrl: https://github.com/acme/governance.git, branch: main, rootPath: "" }
+      credentials:                       # private repositories only; one entry per Git host
+        - { host: github.com, secretKey: git-token-github }   # key in the Secret; add `token:` to have Helm render it
+
+`organizationId` must equal the `org` claim of the tokens that read it. Kustomize: set
+`Axiom__Workers__GovernanceSync__Sources__0__*` in the overlay's ConfigMap patch and add `git-token-github`
+to the Secret. Locally the same keys work as environment variables for `dotnet run --project src/Axiom.Workers`
+(plus `Axiom__Governance__AllowLocalRepositories=true` for a path or `file://` URL).
+
 ## Kustomize
 
     kubectl kustomize deploy/kustomize/overlays/dev  | kubectl apply -f -   # evaluation

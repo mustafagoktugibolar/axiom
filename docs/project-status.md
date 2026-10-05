@@ -89,6 +89,7 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Basic portal (`src/Axiom.Portal`, Vue 3 + TS): governance search/filter, record detail with revision history and relations, evaluation/receipt lookup, review queue (raw); served same-origin by the API when `Axiom:Portal:Path` is set. Auth is a pasted bearer token (OIDC sign-in not built) | done (MVP-level; 10.3-10.4 graphs, 10.6-10.8 rich views not built) | `npm run build` (vue-tsc + vite) |
 | Portal sign-in: OIDC authorization code + PKCE (`/v1/auth/config` advertises authority/client), Development-only `/v1/auth/dev-login`; no pasted tokens | done | 2 integration tests written (need Docker; not run in this session) |
 | Deployment: Dockerfile (api incl. portal, workers), Helm chart `deploy/helm/axiom`, Kustomize base + dev/prod overlays, `--migrate` mode for the migration Job | done | `helm lint`/`template` and `kubectl kustomize` render clean; images and a live cluster install not tested |
+| Governance seed + sync: `GovernanceSyncWorker` in Axiom.Workers registers configured sources (`Axiom:Workers:GovernanceSync:Sources`) and re-syncs every interval; Helm `governance.sources/credentials`, Kustomize overlay patches | done. NOTE: before this the Workers host ran no jobs at all (no sync, no outbox dispatch, no health jobs) | 4 unit tests (seed, per-source failure isolation, disabled, interval); chart renders |
 | Everything else (semantic, onboarding, hardening) | not started; semantic is post-MVP per the PRD | - |
 
 ## How to resume (new terminal session)

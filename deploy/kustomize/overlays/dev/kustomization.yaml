@@ -7,6 +7,17 @@ resources:
   - ../../base
   - postgres.yaml
 patches:
+  - target: { kind: ConfigMap, name: axiom-config }
+    patch: |-
+      - op: add
+        path: /data/Axiom__Workers__GovernanceSync__Sources__0__OrganizationId
+        value: dev
+      - op: add
+        path: /data/Axiom__Workers__GovernanceSync__Sources__0__RepositoryUrl
+        value: https://github.com/example/governance.git
+      - op: add
+        path: /data/Axiom__Workers__GovernanceSync__Sources__0__Branch
+        value: main
   - target: { kind: Deployment, name: axiom-api }
     path: dev-env.yaml
   - target: { kind: Deployment, name: axiom-workers }

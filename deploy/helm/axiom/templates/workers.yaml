@@ -26,7 +26,7 @@ spec:
         - name: workers
           image: {{ include "axiom.image" (dict "root" . "name" .Values.image.workers) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- include "axiom.env" . | nindent 10 }}
+          {{- include "axiom.workerEnv" . | nindent 10 }}
           resources: {{- toYaml .Values.workers.resources | nindent 12 }}
           securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
           # Git mirrors are a cache (deleting costs a re-fetch); they need a writable temp directory.
