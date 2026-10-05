@@ -270,4 +270,16 @@ public class CatalogManifestParserTests
         Assert.Null(result.Import);
         Assert.Contains("not valid YAML", Assert.Single(result.Errors), StringComparison.Ordinal);
     }
+
+    [Theory]
+    [InlineData("/opt/axiom-demo-gateway", true)]
+    [InlineData("file:///srv/git/gateway", true)]
+    [InlineData("C:/repos/gateway", true)]
+    [InlineData("not a url", false)]
+    public void A_local_clone_location_is_accepted_but_a_malformed_one_is_not(string cloneUrl, bool accepted)
+    {
+        var result = Parse(string.Join('\n', "kind: Repository", "metadata:", "  id: repo:gateway", "spec:", $"  cloneUrls: ['{cloneUrl}']"));
+
+        Assert.Equal(accepted, result.Import is not null);
+    }
 }

@@ -27,5 +27,5 @@ metadata:
   title: demo-gateway
 spec:
   cloneUrls:
-    - https://github.com/example/demo-gateway.git
+    - /opt/axiom-demo-gateway
   aliases: [gateway]

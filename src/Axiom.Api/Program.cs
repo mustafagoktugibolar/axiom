@@ -107,6 +107,7 @@ app.MapExceptionEndpoints();
 app.MapMcp("/mcp");
 app.MapAuthMetadata();
 app.MapPortalAuth(app.Environment);
+app.MapDemo(app.Environment, app.Configuration);
 
 await app.RunAsync();
 

@@ -19,6 +19,12 @@ patches:
       - op: add
         path: /data/Axiom__Governance__AllowLocalRepositories
         value: "true"
+      - op: add
+        path: /data/Axiom__Scm__AllowLocalRepositories
+        value: "true"
+      - op: add
+        path: /data/Axiom__Demo__RepositoryPath
+        value: /opt/axiom-demo-gateway
       - op: replace
         path: /data/Axiom__Workers__GovernanceSync__Interval
         value: "00:00:15"

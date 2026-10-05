@@ -1,0 +1,4 @@
+# Shell scripts and demo fixtures run in Linux containers: keep LF so SHAs and shebangs are stable.
+*.sh text eol=lf
+deploy/local/demo/** text eol=lf
+deploy/helm/** text eol=lf

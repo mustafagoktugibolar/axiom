@@ -137,7 +137,7 @@ public sealed class CatalogManifestParser : ICatalogManifestParser
             errors.Add("spec.cloneUrl, spec.cloneUrls and spec.aliases apply only to kind Repository.");
         }
 
-        foreach (var url in cloneUrls.Where(u => RepositoryUrl.Normalize(u) is null))
+        foreach (var url in cloneUrls.Where(u => RepositoryUrl.Normalize(u) is null && !RepositoryUrl.IsLocalPath(u)))
         {
             errors.Add($"spec.cloneUrls: '{url}' is not a clone URL.");
         }

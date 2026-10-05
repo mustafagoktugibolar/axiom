@@ -31,6 +31,22 @@ public static class RepositoryAttributes
 /// </summary>
 public static class RepositoryUrl
 {
+    /// <summary>
+    /// True for an absolute filesystem path or a <c>file://</c> URL. Such a location has no host, so it cannot be
+    /// normalized or matched as an alias; it is only usable where local repositories are explicitly allowed
+    /// (<c>Axiom:Scm:AllowLocalRepositories</c>), which is off by default.
+    /// </summary>
+    public static bool IsLocalPath(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Any(char.IsWhiteSpace))
+        {
+            return false;
+        }
+
+        return value.StartsWith("file://", StringComparison.OrdinalIgnoreCase)
+            || (!value.Contains("://", StringComparison.Ordinal) && (value.StartsWith('/') || (value.Length > 2 && char.IsAsciiLetter(value[0]) && value[1] == ':')));
+    }
+
     /// <summary>Returns <c>host/path</c>, or null when the value has no host.</summary>
     public static string? Normalize(string? value)
     {

@@ -17,6 +17,12 @@ spec:
     exemptable: true
   enforcement:
     defaultVerdict: require_review
+    rules:
+      - ruleId: forbidden-import
+        mode: block
+        with:
+          patterns: "Npgsql"
+          paths: "src/**"
   decision: >
     The API Gateway may perform transport-level routing and authentication handoff,
     but user- or domain-specific business routing belongs in a domain service.

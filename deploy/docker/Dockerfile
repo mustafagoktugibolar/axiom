@@ -20,7 +20,13 @@ RUN dotnet publish src/Axiom.Api/Axiom.Api.csproj -c Release -o /out/api /p:UseA
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 ENV ASPNETCORE_HTTP_PORTS=8080 DOTNET_EnableDiagnostics=0
+# Demo Git repositories for local trials (deploy/local): governance + catalog, and a small code repository.
+# Built as the app user because libgit2 refuses repositories owned by someone else. Harmless when unused.
+USER root
+COPY deploy/local/demo /opt/axiom-demo-src
+RUN chown $APP_UID /opt
 USER $APP_UID
+RUN sh /opt/axiom-demo-src/build.sh
 WORKDIR /app
 
 FROM base AS api
@@ -32,10 +38,4 @@ ENTRYPOINT ["dotnet", "Axiom.Api.dll"]
 
 FROM base AS workers
 COPY --from=build /out/workers ./
-# Sample governance + catalog data for local trials (deploy/local). Created as the app user: libgit2
-# refuses repositories owned by someone else. Harmless when no source points at it.
-USER root
-COPY --chown=$APP_UID deploy/local/demo-repo /opt/axiom-demo
-USER $APP_UID
-RUN cd /opt/axiom-demo && git init -q -b main && git add -A  && git -c user.name=axiom-demo -c user.email=demo@axiom.local commit -q -m "Demo governance data"
 ENTRYPOINT ["dotnet", "Axiom.Workers.dll"]
