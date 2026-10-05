@@ -18,8 +18,7 @@ internal sealed class DbSchemaGate(AxiomDbContext db) : ISchemaGate
     {
         try
         {
-            return await db.Database.CanConnectAsync(cancellationToken)
-                && !(await db.Database.GetPendingMigrationsAsync(cancellationToken)).Any();
+            return await db.IsFullyMigratedAsync(cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

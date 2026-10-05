@@ -14,15 +14,9 @@ public sealed class SchemaHealthCheck(AxiomDbContext db) : IHealthCheck
     {
         try
         {
-            if (!await db.Database.CanConnectAsync(cancellationToken))
-            {
-                return HealthCheckResult.Unhealthy("The database is not reachable.");
-            }
-
-            var pending = (await db.Database.GetPendingMigrationsAsync(cancellationToken)).ToList();
-            return pending.Count == 0
+            return await db.IsFullyMigratedAsync(cancellationToken)
                 ? HealthCheckResult.Healthy()
-                : HealthCheckResult.Unhealthy($"{pending.Count} migration(s) pending ({pending[0]}...). Run the migration job.");
+                : HealthCheckResult.Unhealthy("The database is unreachable or its schema is not fully migrated (run the migration job).");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

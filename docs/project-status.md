@@ -94,7 +94,7 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Readiness now checks migrations (`SchemaHealthCheck`), workers wait for the schema (`ISchemaGate`), EF command log noise off | done | found by running the stack: pgvector image missing, overlay resources landing in `default` namespace |
 | Onboarding API `GET/PUT /v1/admin/governance-source`: tests the repository (reachable, files under the records directory) before storing; workers also read `.axiom/catalog.yaml` from registered repositories | done | 3 integration tests |
 | Demo: governance records + catalog + a code repository whose branch violates ARCH-001 (PR check -> BLOCK), `/v1/demo` helper (Development only) | done | verified live |
-| Everything else (semantic, onboarding, hardening) | not started; semantic is post-MVP per the PRD | - |
+| Everything else (semantic analyzer, outbox/event delivery, governance-health jobs, expiry review, richer onboarding such as candidate decisions and several repositories, hardening) | not started; semantic is post-MVP per the PRD | - |
 
 ## How to resume (new terminal session)
 

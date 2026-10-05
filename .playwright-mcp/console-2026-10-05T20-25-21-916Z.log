@@ -1,1 +1,11 @@
 [   15293ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:8080/v1/admin/governance-source:0
+[  425559ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'slice')
+    at http://localhost:8080/assets/index-CwV9n9ZY.js:18:30701
+    at ee (http://localhost:8080/assets/index-CwV9n9ZY.js:13:6976)
+    at Proxy.<anonymous> (http://localhost:8080/assets/index-CwV9n9ZY.js:18:30474)
+    at Zs (http://localhost:8080/assets/index-CwV9n9ZY.js:13:14884)
+    at Po.T [as fn] (http://localhost:8080/assets/index-CwV9n9ZY.js:13:24417)
+    at Po.run (http://localhost:8080/assets/index-CwV9n9ZY.js:9:2077)
+    at Po.runIfDirty (http://localhost:8080/assets/index-CwV9n9ZY.js:9:2387)
+    at nn (http://localhost:8080/assets/index-CwV9n9ZY.js:13:46)
+    at Qo (http://localhost:8080/assets/index-CwV9n9ZY.js:13:1858) @ http://localhost:8080/assets/index-CwV9n9ZY.js:12
