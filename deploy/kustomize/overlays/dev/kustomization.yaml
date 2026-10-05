@@ -3,6 +3,7 @@
 # Replace the literals below, or better, create the secret out of band.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: axiom
 resources:
   - ../../base
   - postgres.yaml

@@ -1,0 +1,48 @@
+# Docker Desktop Kubernetes: locally built images (axiom-api:local, axiom-workers:local), the dev overlay's
+# Postgres and dev login, and the demo governance repository baked into the workers image.
+# Run deploy/local/up.ps1 instead of applying this by hand.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: axiom
+resources:
+  - ../dev
+images:
+  - name: axiom-api
+    newName: axiom-api
+    newTag: local
+  - name: axiom-workers
+    newName: axiom-workers
+    newTag: local
+patches:
+  - target: { kind: ConfigMap, name: axiom-config }
+    patch: |-
+      - op: add
+        path: /data/Axiom__Governance__AllowLocalRepositories
+        value: "true"
+      - op: replace
+        path: /data/Axiom__Workers__GovernanceSync__Interval
+        value: "00:00:15"
+      - op: replace
+        path: /data/Axiom__Workers__GovernanceSync__Sources__0__RepositoryUrl
+        value: /opt/axiom-demo
+      - op: add
+        path: /data/Axiom__Workers__GovernanceSync__Sources__0__RootPath
+        value: governance
+      - op: add
+        path: /data/Axiom__Workers__CatalogSync__Interval
+        value: "00:00:30"
+      - op: add
+        path: /data/Axiom__Workers__CatalogSync__Sources__0__OrganizationId
+        value: dev
+      - op: add
+        path: /data/Axiom__Workers__CatalogSync__Sources__0__RepositoryUrl
+        value: /opt/axiom-demo
+      - op: add
+        path: /data/Axiom__Workers__CatalogSync__Sources__0__Branch
+        value: main
+  # One API replica and no disruption budget: a single local node.
+  - target: { kind: PodDisruptionBudget, name: axiom-api }
+    patch: |-
+      - op: replace
+        path: /spec/minAvailable
+        value: 0

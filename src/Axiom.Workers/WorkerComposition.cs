@@ -25,7 +25,10 @@ public static class WorkerComposition
 
         services.AddOptions<GovernanceSyncOptions>().Bind(configuration.GetSection(GovernanceSyncOptions.SectionName));
         services.TryAddSingleton(TimeProvider.System);
+        services.AddScoped<ISchemaGate, DbSchemaGate>();
         services.AddHostedService<GovernanceSyncWorker>();
+        services.AddOptions<CatalogSyncOptions>().Bind(configuration.GetSection(CatalogSyncOptions.SectionName));
+        services.AddHostedService<CatalogSyncWorker>();
         return services;
     }
 }

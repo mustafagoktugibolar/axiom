@@ -31,7 +31,7 @@ database:
     password: ""
     storage: 5Gi
     storageClassName: ""
-    image: postgres:17
+    image: pgvector/pgvector:pg17   # the schema needs the pgvector extension
 
 secrets:
   # Use an existing Secret instead of one rendered by this chart. Keys:

@@ -1,0 +1,31 @@
+kind: Domain
+metadata:
+  id: domain:gui
+  title: GUI
+---
+kind: System
+metadata:
+  id: system:gui-platform
+  title: GUI Platform
+spec:
+  domain: domain:gui
+---
+kind: Component
+metadata:
+  id: component:gui-platform/api-gateway
+  title: API Gateway
+spec:
+  system: system:gui-platform
+  owner: team:platform-architecture
+  repositories:
+    - repo:demo-gateway
+  technologies: [dotnet, postgresql]
+---
+kind: Repository
+metadata:
+  id: repo:demo-gateway
+  title: demo-gateway
+spec:
+  cloneUrls:
+    - https://github.com/example/demo-gateway.git
+  aliases: [gateway]

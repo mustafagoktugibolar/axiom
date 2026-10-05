@@ -3,6 +3,7 @@
 #   kubectl -n axiom create secret generic axiom-secrets --from-literal=connection-string='Host=...;...'
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: axiom
 resources:
   - ../../base
   - ingress.yaml

@@ -38,7 +38,7 @@ public static class InfrastructureModule
         services.AddScoped<IReviewStore, EfReviewStore>();
         services.AddScoped<IExceptionRequestStore, EfExceptionRequestStore>();
 
-        services.AddHealthChecks().AddDbContextCheck<AxiomDbContext>("postgresql", tags: ["ready"]);
+        services.AddHealthChecks().AddCheck<SchemaHealthCheck>("postgresql", tags: ["ready"]);
 
         // The OTLP exporter reads OTEL_EXPORTER_OTLP_* from the environment; with no endpoint set it stays idle.
         services.AddOpenTelemetry()

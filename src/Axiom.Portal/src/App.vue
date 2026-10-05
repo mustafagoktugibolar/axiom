@@ -4,9 +4,10 @@ import { completeSignIn, isSignedIn, loadConfig, signIn, signOut } from './auth'
 import Explorer from './views/Explorer.vue';
 import RecordDetail from './views/RecordDetail.vue';
 import Lookup from './views/Lookup.vue';
+import Start from './views/Start.vue';
 
-type View = 'explorer' | 'evaluation' | 'receipt' | 'reviews';
-const view = ref<View>('explorer');
+type View = 'start' | 'explorer' | 'evaluation' | 'receipt' | 'reviews';
+const view = ref<View>('start');
 const selected = ref<string | null>(null);
 const signedIn = ref(isSignedIn());
 const authError = ref('');
@@ -29,6 +30,7 @@ function logout() { signOut(); signedIn.value = false; selected.value = null; }
   <header>
     <strong>Axiom</strong>
     <nav v-if="signedIn" aria-label="Primary">
+      <button :aria-current="view === 'start' ? 'page' : undefined" @click="go('start')">Get started</button>
       <button :aria-current="view === 'explorer' ? 'page' : undefined" @click="go('explorer')">Governance</button>
       <button :aria-current="view === 'evaluation' ? 'page' : undefined" @click="go('evaluation')">Evaluation</button>
       <button :aria-current="view === 'receipt' ? 'page' : undefined" @click="go('receipt')">Receipt</button>
@@ -42,7 +44,8 @@ function logout() { signOut(); signedIn.value = false; selected.value = null; }
     <button :disabled="busy" @click="login">Sign in</button>
   </main>
   <main v-else>
-    <template v-if="view === 'explorer'">
+    <Start v-if="view === 'start'" @open="(id: string) => { view = 'explorer'; selected = id; }" />
+    <template v-else-if="view === 'explorer'">
       <RecordDetail v-if="selected" :id="selected" @back="selected = null" @open="(id: string) => (selected = id)" />
       <Explorer v-else @open="(id: string) => (selected = id)" />
     </template>

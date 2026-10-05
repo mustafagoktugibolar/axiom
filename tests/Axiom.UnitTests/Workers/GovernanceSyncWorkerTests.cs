@@ -16,11 +16,14 @@ public sealed class GovernanceSyncWorkerTests
 
     private readonly IGovernanceSourceRegistry _registry = Substitute.For<IGovernanceSourceRegistry>();
     private readonly IGovernanceSynchronizer _synchronizer = Substitute.For<IGovernanceSynchronizer>();
+    private readonly ISchemaGate _gate = Substitute.For<ISchemaGate>();
     private readonly FakeTimeProvider _time = new();
+
+    public GovernanceSyncWorkerTests() => _gate.IsReadyAsync(Arg.Any<CancellationToken>()).Returns(true);
 
     private GovernanceSyncWorker Worker(GovernanceSyncOptions options)
     {
-        var services = new ServiceCollection().AddSingleton(_registry).AddSingleton(_synchronizer).BuildServiceProvider();
+        var services = new ServiceCollection().AddSingleton(_registry).AddSingleton(_synchronizer).AddSingleton(_gate).BuildServiceProvider();
         return new GovernanceSyncWorker(services.GetRequiredService<IServiceScopeFactory>(), Options.Create(options), _time, NullLogger<GovernanceSyncWorker>.Instance);
     }
 
@@ -60,6 +63,19 @@ public sealed class GovernanceSyncWorkerTests
         await RunOneCycleAsync(Worker(new GovernanceSyncOptions()));
 
         await _synchronizer.Received(1).SynchronizeAsync(good, SyncMode.Incremental, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Nothing_runs_while_the_schema_is_not_ready()
+    {
+        _gate.IsReadyAsync(Arg.Any<CancellationToken>()).Returns(false);
+        var options = new GovernanceSyncOptions();
+        options.Sources.Add(Seed);
+
+        await RunOneCycleAsync(Worker(options));
+
+        await _registry.DidNotReceiveWithAnyArgs().UpsertAsync(default!, default);
+        await _registry.DidNotReceiveWithAnyArgs().ListAsync(default);
     }
 
     [Fact]

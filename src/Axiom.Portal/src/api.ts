@@ -38,6 +38,32 @@ export async function get<T>(path: string, params: Record<string, string | numbe
   return (await res.json()) as T;
 }
 
+export async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try { const p = await res.json(); detail = p.detail ?? p.title ?? detail; } catch { /* non-JSON error body */ }
+    throw new ApiError(res.status, res.status === 401 ? 'Your session expired or you are not signed in.' : detail);
+  }
+  return (await res.json()) as T;
+}
+
+export interface PreflightResult {
+  evaluationId: string; verdict: string; significantChange: boolean;
+  significanceTriggers: { code: string; explanation: string }[];
+  resolvedScope: Record<string, string[]>; topologyGaps: string[];
+  applicableGovernance: { id: string; kind: string; title: string; importance: string }[];
+  requiredActions: string[]; requiredReviewers: string[];
+  findings: { code: string; severity: string; message: string }[];
+}
+export const preflight = (p: { repository: string; ref: string; task: string; paths?: string[] }) =>
+  post<PreflightResult>('/v1/evaluations/preflight', p);
+export const countGovernance = () => get<{ total: number }>('/v1/governance', { take: 1 });
+
 export const searchGovernance = (p: { q?: string; kind?: string; status?: string; repository?: string; staleOnly?: boolean }) =>
   get<{ items: GovernanceSummary[]; total: number }>('/v1/governance', { ...p, take: 50 });
 export const getRecord = (id: string) => get<GovernanceDetail>(`/v1/governance/${encodeURIComponent(id)}`, { includeRationale: true });

@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:17
+          image: pgvector/pgvector:pg17
           env:
             - { name: POSTGRES_USER, value: axiom }
             - { name: POSTGRES_DB, value: axiom }

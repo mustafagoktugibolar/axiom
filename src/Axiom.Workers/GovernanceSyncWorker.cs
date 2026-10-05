@@ -88,6 +88,12 @@ public sealed partial class GovernanceSyncWorker(
     private async Task<bool> RunCycleAsync(GovernanceSyncOptions settings, bool alreadySeeded, CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
+        if (!await scope.ServiceProvider.GetRequiredService<ISchemaGate>().IsReadyAsync(cancellationToken))
+        {
+            LogWaitingForSchema();
+            return alreadySeeded;
+        }
+
         var registry = scope.ServiceProvider.GetRequiredService<IGovernanceSourceRegistry>();
 
         if (!alreadySeeded)
@@ -125,6 +131,9 @@ public sealed partial class GovernanceSyncWorker(
 
         return true;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Database schema is not ready (migrations pending or database unreachable); governance sync waits.")]
+    private partial void LogWaitingForSchema();
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Governance sync is disabled.")]
     private partial void LogDisabled();
