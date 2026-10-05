@@ -124,6 +124,13 @@ the choice is the owner's.
 - **12.2** penetration test — needs an independent tester.
 - **Phase 13** organizational rollout (pilot, training, monthly reviews, scorecards).
 
+## Planned later
+
+- **Secret management:** today the `axiom-secrets` Secret is created by hand (`kubectl create secret`, see
+  `deploy/README.md`). Decision: move to External Secrets Operator later. That needs an optional `ExternalSecret`
+  template in the chart, wiring of the SCM tokens (`Axiom:Scm:Credentials:<host>`, not yet mapped in the chart),
+  and rotation notes (pods restart on Secret change).
+
 ## Blocked items
 
 None.
