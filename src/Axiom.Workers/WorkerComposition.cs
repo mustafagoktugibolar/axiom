@@ -2,6 +2,7 @@ using Axiom.Application;
 using Axiom.Application.Policy;
 using Axiom.Infrastructure;
 using Axiom.Infrastructure.Catalog;
+using Axiom.Infrastructure.Events;
 using Axiom.Infrastructure.Governance;
 using Axiom.Infrastructure.Scm;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -29,6 +30,9 @@ public static class WorkerComposition
         services.AddHostedService<GovernanceSyncWorker>();
         services.AddOptions<CatalogSyncOptions>().Bind(configuration.GetSection(CatalogSyncOptions.SectionName));
         services.AddHostedService<CatalogSyncWorker>();
+        services.AddEventDelivery(configuration);
+        services.AddScoped<OutboxDispatcher>();
+        services.AddHostedService<OutboxDispatcherWorker>();
         return services;
     }
 }
