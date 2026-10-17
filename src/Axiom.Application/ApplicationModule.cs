@@ -30,6 +30,7 @@ public static class ApplicationModule
         services.AddOptions<GovernanceHealthOptions>();
         services.AddScoped<GovernanceHealthService>();
         services.AddScoped<ExceptionExpiryNotifier>();
+        services.AddScoped<GovernanceGraphService>();
         services.AddScoped<ImpactService>();
         services.AddScoped<ReceiptService>();
         services.AddScoped<ContextService>();
