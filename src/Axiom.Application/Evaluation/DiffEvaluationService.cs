@@ -272,7 +272,8 @@ public sealed class DiffEvaluationService(
         }
 
         var outcome = await semantic.AnalyzeAsync(
-            new SemanticInput(session.Context.RepositoryName, session.Request.Task, session.Resolution, diff.Files),
+            new SemanticInput(session.Context.RepositoryName, session.Request.Task, session.Resolution, diff.Files,
+                session.Request.Principal.OrganizationId, session.Context.Topology),
             cancellationToken);
         session.SemanticCoverage = outcome.Coverage;
         session.Findings.AddRange(outcome.Findings);
