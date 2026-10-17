@@ -77,7 +77,16 @@ internal sealed class FakeGraph : ISystemGraph
 
     public Task<GraphQualityReport> GetQualityReportAsync(string organizationId, TimeSpan staleAfter, CancellationToken cancellationToken) => throw new NotSupportedException();
 
-    public Task<GraphView> GetViewAsync(string organizationId, EntityRef? focus, int depth, int maxNodes, CancellationToken cancellationToken) => throw new NotSupportedException();
+    /// <summary>What <see cref="GetViewAsync"/> returns, for tests that need catalog neighbours; unset, the call is not supported.</summary>
+    public GraphView? View { get; set; }
+
+    public int ViewCalls { get; private set; }
+
+    public Task<GraphView> GetViewAsync(string organizationId, EntityRef? focus, int depth, int maxNodes, CancellationToken cancellationToken)
+    {
+        ViewCalls++;
+        return View is { } view ? Task.FromResult(view) : throw new NotSupportedException();
+    }
 
     public Task<string> GetCatalogVersionAsync(string organizationId, CancellationToken cancellationToken) => Task.FromResult(Version);
 }

@@ -17,7 +17,8 @@ public static partial class EvidencePacketBuilder
     private const string Redacted = "[REDACTED]";
 
     public static EvidencePacket Build(
-        string repository, string? task, IEnumerable<AppliedRecord> effective, IEnumerable<ChangedFile> changes, SemanticOptions options)
+        string repository, string? task, IEnumerable<AppliedRecord> effective, IEnumerable<ChangedFile> changes, SemanticOptions options,
+        IEnumerable<EvidenceComponent>? existingComponents = null)
     {
         ArgumentNullException.ThrowIfNull(effective);
         ArgumentNullException.ThrowIfNull(changes);
@@ -62,12 +63,25 @@ public static partial class EvidencePacketBuilder
                 [.. lines.Take(options.MaxLinesPerFile).Select(l => new EvidenceLine(l.Number, Scrub(Clip(l.Text.Trim(), options.MaxLineChars, ref truncated))))]);
         }).ToImmutableArray();
 
+        var hints = (existingComponents ?? []).OrderBy(c => c.Id, StringComparer.Ordinal).ToList();
+        if (hints.Count > options.MaxExistingComponents)
+        {
+            truncated = true;
+        }
+
+        var components = hints.Take(options.MaxExistingComponents).Select(c => new EvidenceComponent(
+            Scrub(Clip(c.Id, 200, ref truncated)),
+            Scrub(Clip(c.Title, options.MaxComponentChars, ref truncated)),
+            string.IsNullOrWhiteSpace(c.Description) ? null : Scrub(Clip(c.Description, options.MaxComponentChars, ref truncated)),
+            [.. (c.Technologies.IsDefaultOrEmpty ? [] : c.Technologies).Take(8).Select(t => Scrub(Clip(t, 60, ref truncated)))])).ToImmutableArray();
+
         return new EvidencePacket(
             repository,
             string.IsNullOrWhiteSpace(task) ? null : Scrub(Clip(task.Trim(), options.MaxTaskChars, ref truncated)),
             records,
             evidence,
-            truncated);
+            truncated,
+            components);
     }
 
     /// <summary>Removes values that look like credentials. It is a safety net, not a guarantee.</summary>

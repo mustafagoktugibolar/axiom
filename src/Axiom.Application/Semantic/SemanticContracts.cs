@@ -7,16 +7,26 @@ public enum SemanticFindingKind
 {
     /// <summary>The change appears to contradict the intent of an applicable decision, in a way no lint rule expresses.</summary>
     DecisionConflict,
+
+    /// <summary>The change appears to introduce an architectural choice (datastore, messaging, framework, cross-service protocol) that no applicable record covers (task 7.7).</summary>
+    UnrecordedDecision,
+
+    /// <summary>The change appears to re-implement a component or API that already exists in the same system (task 7.6).</summary>
+    PossibleDuplicateSolution,
 }
 
 /// <summary>Stable codes of semantic findings (R9: semantic findings are advisory by default, ADR-0005).</summary>
 public static class SemanticFindingCodes
 {
     public const string PotentialDecisionConflict = "SEMANTIC_POTENTIAL_DECISION_CONFLICT";
+    public const string UnrecordedDecision = "SEMANTIC_UNRECORDED_DECISION";
+    public const string PossibleDuplicateSolution = "SEMANTIC_POSSIBLE_DUPLICATE_SOLUTION";
 
     public static string For(SemanticFindingKind kind) => kind switch
     {
         SemanticFindingKind.DecisionConflict => PotentialDecisionConflict,
+        SemanticFindingKind.UnrecordedDecision => UnrecordedDecision,
+        SemanticFindingKind.PossibleDuplicateSolution => PossibleDuplicateSolution,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 }
@@ -30,6 +40,12 @@ public sealed record EvidenceRecord(
     string Statement,
     ImmutableArray<string> Forbidden,
     ImmutableArray<string> Preferred);
+
+/// <summary>
+/// An existing component or API of the same system, taken from the System Graph (task 7.6). It is a hint
+/// for duplicate detection only; its text is catalog data, bounded and scrubbed, and untrusted like all evidence.
+/// </summary>
+public sealed record EvidenceComponent(string Id, string Title, string? Description, ImmutableArray<string> Technologies);
 
 /// <summary>The added lines of one changed file, bounded and redacted.</summary>
 public sealed record EvidenceChange(string Path, ImmutableArray<EvidenceLine> AddedLines);
@@ -45,19 +61,26 @@ public sealed record EvidencePacket(
     string? Task,
     ImmutableArray<EvidenceRecord> Records,
     ImmutableArray<EvidenceChange> Changes,
-    bool Truncated)
+    bool Truncated,
+    ImmutableArray<EvidenceComponent> ExistingComponents = default)
 {
     public bool HasContent => !Records.IsDefaultOrEmpty && (!Changes.IsDefaultOrEmpty || !string.IsNullOrWhiteSpace(Task));
 }
 
-/// <summary>A finding exactly as a provider returned it, before validation against the packet.</summary>
+/// <summary>
+/// A finding exactly as a provider returned it, before validation against the packet. What must be citable
+/// depends on the kind: a decision conflict needs <see cref="RecordId"/> and <see cref="Path"/>; an
+/// unrecorded decision needs <see cref="Path"/> only (it is about the absence of a record); a possible
+/// duplicate needs <see cref="Path"/> and an <see cref="EntityId"/> from the packet's existing components.
+/// </summary>
 public sealed record RawSemanticFinding(
     SemanticFindingKind Kind,
     string RecordId,
     string Path,
     int? Line,
     string Explanation,
-    double Confidence);
+    double Confidence,
+    string? EntityId = null);
 
 public sealed record SemanticUsage(int InputTokens, int OutputTokens);
 
@@ -109,6 +132,11 @@ public sealed class SemanticOptions
     public int MaxTaskChars { get; set; } = 1_000;
 
     public int MaxFindings { get; set; } = 10;
+
+    /// <summary>Upper bound of existing components/APIs of the same system put into the packet as duplicate-solution hints (task 7.6).</summary>
+    public int MaxExistingComponents { get; set; } = 30;
+
+    public int MaxComponentChars { get; set; } = 200;
 
     public int TimeoutSeconds { get; set; } = 20;
 }
