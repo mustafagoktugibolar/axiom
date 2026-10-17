@@ -27,6 +27,10 @@ public static class AxiomTelemetry
     public static readonly Counter<long> ScmStatusFailures = Meter.CreateCounter<long>("axiom.scm.status_failures", description: "Status checks that could not be published to the source-control system.");
     public static readonly Counter<long> ExceptionUsage = Meter.CreateCounter<long>("axiom.exception.usage", description: "Exceptions applied during evaluations.");
     public static readonly Histogram<double> IngestionLag = Meter.CreateHistogram<double>("axiom.ingestion.lag", "s", "Delay between a governance commit and its published snapshot.");
+    public static readonly Counter<long> EventsDelivered = Meter.CreateCounter<long>("axiom.events.delivered", description: "Events delivered, by sink.");
+    public static readonly Counter<long> EventsFailed = Meter.CreateCounter<long>("axiom.events.failed", description: "Failed event delivery attempts, by sink.");
+    public static readonly Counter<long> EventsDeadLettered = Meter.CreateCounter<long>("axiom.events.dead_lettered", description: "Events given up on after the maximum number of attempts.");
+    public static readonly Histogram<double> EventsLag = Meter.CreateHistogram<double>("axiom.events.lag", "s", "Delay between an event occurring and its delivery.");
 
     public static class Spans
     {

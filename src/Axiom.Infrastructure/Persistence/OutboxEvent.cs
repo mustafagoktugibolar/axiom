@@ -27,6 +27,17 @@ public sealed class OutboxEvent
     public DateTimeOffset? DispatchedAt { get; set; }
 
     public int Attempts { get; set; }
+
+    /// <summary>Earliest time the next delivery attempt may start (retry backoff); null means due now.</summary>
+    public DateTimeOffset? NextAttemptAt { get; set; }
+
+    /// <summary>Lease held by a dispatcher replica; other replicas skip the row until it passes.</summary>
+    public DateTimeOffset? LockedUntil { get; set; }
+
+    /// <summary>Set when the event exhausted its attempts. Such rows are never claimed again.</summary>
+    public DateTimeOffset? DeadLetteredAt { get; set; }
+
+    public string? LastError { get; set; }
 }
 
 internal sealed class OutboxEventConfiguration : IEntityTypeConfiguration<OutboxEvent>
@@ -45,7 +56,11 @@ internal sealed class OutboxEventConfiguration : IEntityTypeConfiguration<Outbox
         builder.Property(e => e.Data).HasColumnName("data").HasColumnType("jsonb");
         builder.Property(e => e.DispatchedAt).HasColumnName("dispatched_at");
         builder.Property(e => e.Attempts).HasColumnName("attempts");
-        builder.HasIndex(e => e.OccurredAt).HasDatabaseName("ix_outbox_event_pending").HasFilter("dispatched_at IS NULL");
+        builder.Property(e => e.NextAttemptAt).HasColumnName("next_attempt_at");
+        builder.Property(e => e.LockedUntil).HasColumnName("locked_until");
+        builder.Property(e => e.DeadLetteredAt).HasColumnName("dead_lettered_at");
+        builder.Property(e => e.LastError).HasColumnName("last_error").HasMaxLength(1024);
+        builder.HasIndex(e => e.OccurredAt).HasDatabaseName("ix_outbox_event_pending").HasFilter("dispatched_at IS NULL AND dead_lettered_at IS NULL");
     }
 }
 
