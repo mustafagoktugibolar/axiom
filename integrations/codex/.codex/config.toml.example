@@ -1,0 +1,5 @@
+# Codex MCP server (streamable HTTP). The token is read from the environment, never inlined.
+# Copy into ~/.codex/config.toml (user scope) or .codex/config.toml (project scope, trusted projects).
+[mcp_servers.axiom]
+url = "https://axiom.example.com/mcp"
+bearer_token_env_var = "AXIOM_TOKEN"
