@@ -74,3 +74,6 @@ dist/
 
 # Visual Studio local state
 .vs/
+
+# Harness packs ship example editor config
+!integrations/**/.vscode/

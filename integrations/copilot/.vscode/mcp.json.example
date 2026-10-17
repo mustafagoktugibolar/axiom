@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "axiom": {
+      "type": "http",
+      "url": "https://axiom.example.com/mcp",
+      "headers": { "Authorization": "Bearer ${env:AXIOM_TOKEN}" }
+    }
+  }
+}
