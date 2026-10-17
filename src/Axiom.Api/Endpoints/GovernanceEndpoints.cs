@@ -40,6 +40,9 @@ internal static class GovernanceEndpoints
         governance.MapGet("/{id}", async (string id, bool? includeRationale, AxiomPrincipal principal, GovernanceReadService service, CancellationToken ct) =>
             await service.GetAsync(principal, id, includeRationale ?? false, ct)).WithName("getGovernanceRecord");
 
+        routes.MapGet("/v1/health/governance", async (AxiomPrincipal principal, GovernanceHealthService service, int? skip, int? take, CancellationToken ct) =>
+            await service.GetAsync(principal, skip ?? 0, take ?? 50, ct)).WithTags("Governance").WithName("getGovernanceHealth");
+
         routes.MapPost("/v1/impact", async (ImpactBody body, AxiomPrincipal principal, ImpactService service, CancellationToken ct) =>
             await service.AnalyzeAsync(principal, new ImpactRequestDto(body.Repository, body.ChangeKind, body.EntityRef, body.Depth, body.IncludeUnconfirmed), ct))
             .WithTags("Impact").WithName("impactAnalysis");
