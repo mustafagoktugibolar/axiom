@@ -1,4 +1,5 @@
 using Axiom.Application;
+using Axiom.Application.Governance;
 using Axiom.Application.Policy;
 using Axiom.Infrastructure;
 using Axiom.Infrastructure.Catalog;
@@ -27,6 +28,9 @@ public static class WorkerComposition
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<ISchemaGate, DbSchemaGate>();
         services.AddHostedService<GovernanceSyncWorker>();
+        services.AddOptions<GovernanceHealthOptions>().Bind(configuration.GetSection(GovernanceHealthOptions.SectionName));
+        services.AddOptions<GovernanceHealthWorkerOptions>().Bind(configuration.GetSection(GovernanceHealthWorkerOptions.SectionName));
+        services.AddHostedService<GovernanceHealthWorker>();
         services.AddOptions<CatalogSyncOptions>().Bind(configuration.GetSection(CatalogSyncOptions.SectionName));
         services.AddHostedService<CatalogSyncWorker>();
         return services;

@@ -115,6 +115,21 @@ paths:
       responses:
         '200':
           description: Governance record
+  /v1/health/governance:
+    get:
+      operationId: getGovernanceHealth
+      security:
+        - oauth2: [axiom.read]
+      parameters:
+        - in: query
+          name: skip
+          schema: { type: integer, minimum: 0 }
+        - in: query
+          name: take
+          schema: { type: integer, minimum: 1, maximum: 200 }
+      responses:
+        '200':
+          description: Counts and bounded lists of stale records, records without owners, deprecated records still referenced and exceptions about to expire
   /v1/exceptions/requests:
     post:
       operationId: requestException
