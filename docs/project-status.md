@@ -94,16 +94,16 @@ The spec phases are mostly already in dependency order. Adjustments:
 | Readiness now checks migrations (`SchemaHealthCheck`), workers wait for the schema (`ISchemaGate`), EF command log noise off | done | found by running the stack: pgvector image missing, overlay resources landing in `default` namespace |
 | Onboarding API `GET/PUT /v1/admin/governance-source`: tests the repository (reachable, files under the records directory) before storing; workers also read `.axiom/catalog.yaml` from registered repositories | done | 3 integration tests |
 | Demo: governance records + catalog + a code repository whose branch violates ARCH-001 (PR check -> BLOCK), `/v1/demo` helper (Development only) | done | verified live |
-| Everything else (semantic analyzer, outbox/event delivery, governance-health jobs, expiry review, richer onboarding such as candidate decisions and several repositories, hardening) | not started; semantic is post-MVP per the PRD | - |
+| Phase 7 (first slice, 7.1-7.5, 7.9 basic, 7.12): semantic analyzer on diff / PR evaluations. Provider port (`ISemanticProvider`), bounded and secret-scrubbed evidence packet, typed output (JSON schema, strict parse), content boundary with a per-call random delimiter, potential-decision-conflict analyzer. Findings must cite a record and file from the packet or are dropped; confidence bands (>= 0.5 WARN, >= 0.8 REQUIRE_REVIEW), never BLOCK (ADR-0005, P9); provider failure/timeout = `Degraded` coverage, deterministic verdict untouched (R24); records with `semanticExternalAllowed: false` keep the change away from external providers (`ProhibitedByScope`). Providers: `Heuristic` (local, lexical, no model) and `Anthropic` (Messages API, forced tool call). Off by default (`Axiom:Semantic:Enabled`); the local overlay turns on `Heuristic`. Portal shows confidence and coverage; demo has a second branch only semantic analysis flags | done; not yet exercised on the cluster or against a real model | 43 unit tests (analyzer, packet, prompt boundary, parser, heuristic, end-to-end through the diff service) |
+| Everything else (semantic 7.6-7.8, 7.10-7.11 (duplicate-solution, new-decision detector, candidate ADRs, feedback calibration, false-positive metrics), outbox/event delivery, governance-health jobs, expiry review, richer onboarding such as candidate decisions and several repositories, hardening) | not started | - |
 
 ## How to resume (new terminal session)
 
-1. Work is in `/Users/goktugibolar/dev/axiom` on `main`. The three subagent branches are merged; their
-   worktrees under `.claude/worktrees/*` and `worktree-agent-*` branches can be removed.
+1. Work is on `main` of this repository; there are no long-lived side branches or worktrees.
 2. Migrations are a single `Initial` (the DB is not deployed). After changing a persistence model run
    `dotnet ef migrations add <Name> -o Persistence/Migrations` from `src/Axiom.Infrastructure`, or, while
    still undeployed, delete the migrations and regenerate `Initial`.
-3. Next slices in order: semantic analyzer (Phase 7) -> onboarding (Phase 11) -> portal (Phase 10) ->
+3. Next slices in order: rest of Phase 7 (7.6-7.8, 7.10, 7.11) -> onboarding (Phase 11) -> portal (Phase 10) ->
    deploy/CI -> hardening (Phase 12).
 4. Verify with `dotnet build Axiom.slnx && dotnet test Axiom.slnx` (Docker needed for Postgres tests).
 

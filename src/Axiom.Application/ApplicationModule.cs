@@ -2,6 +2,7 @@ using Axiom.Application.Evaluation;
 using Axiom.Application.Exceptions;
 using Axiom.Application.Query;
 using Axiom.Application.Review;
+using Axiom.Application.Semantic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -17,6 +18,8 @@ public static class ApplicationModule
         services.AddScoped<EvaluationPipeline>();
         services.AddScoped<PreflightService>();
         services.AddScoped<DesignValidationService>();
+        services.AddOptions<SemanticOptions>();
+        services.AddScoped<SemanticAnalyzer>();
         services.AddScoped<DiffEvaluationService>();
         services.AddScoped<PullRequestStatusReporter>();
         services.AddScoped<ExceptionRequestService>();

@@ -56,7 +56,8 @@ const when = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
       <h2>Findings</h2>
       <div v-for="f in detail.evaluation.findings" :key="f.code + f.message" class="card">
         <p><strong :class="verdictClass(f.severity)">{{ f.severity }}</strong> {{ f.code }}
-          <span v-if="f.path" class="muted"> · <code>{{ f.path }}<template v-if="f.line">:{{ f.line }}</template></code></span></p>
+          <span v-if="f.path" class="muted"> · <code>{{ f.path }}<template v-if="f.line">:{{ f.line }}</template></code></span>
+          <span v-if="f.source === 'semantic'" class="muted"> · semantic suggestion<template v-if="f.confidence != null">, confidence {{ Math.round(f.confidence * 100) }}%</template></span></p>
         <p>{{ f.message }}</p>
         <p v-if="f.governanceIds.length">Governance:
           <button v-for="g in f.governanceIds" :key="g" class="link" @click="$emit('openRecord', g)">{{ g }} </button></p>
@@ -65,6 +66,11 @@ const when = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
       </div>
     </section>
     <p v-else class="ok">No findings.</p>
+    <p v-if="detail.evaluation.semanticCoverage && detail.evaluation.semanticCoverage.status !== 'NotRequested'" class="muted">
+      Semantic analysis: {{ detail.evaluation.semanticCoverage.status }}
+      <template v-if="detail.evaluation.semanticCoverage.provider"> via {{ detail.evaluation.semanticCoverage.provider }}/{{ detail.evaluation.semanticCoverage.model }}</template>
+      <template v-if="detail.evaluation.semanticCoverage.reason"> - {{ detail.evaluation.semanticCoverage.reason }}</template>
+    </p>
 
     <section v-if="detail.evaluation.requiredActions.length">
       <h2>Required next actions</h2>

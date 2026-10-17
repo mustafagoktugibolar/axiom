@@ -78,7 +78,7 @@ export interface EvaluationSummary {
 }
 export interface Finding {
   code: string; severity: string; message: string; source: string; governanceIds: string[];
-  recommendedAction?: string; path?: string; line?: number;
+  recommendedAction?: string; path?: string; line?: number; confidence?: number;
 }
 export interface EvaluationDetail {
   evaluation: PreflightResult & {
@@ -86,6 +86,7 @@ export interface EvaluationDetail {
     requiredChecks: { ruleId: string; recordId: string; mode: string }[];
     activeExceptions: { id: string; expiresAt: string; coverage: string }[];
     affectedDependencies: { entity: string; depth: number; owners: string[] }[];
+    semanticCoverage?: { status: string; reason?: string; provider?: string; model?: string };
   };
   actor: { subject: string; displayName?: string };
   scm?: { repository: string; commitSha: string; baseSha?: string };
@@ -110,7 +111,8 @@ export const overturnFinding = (id: string, code: string, comment: string) =>
   post<unknown>(`/v1/evaluations/${encodeURIComponent(id)}/findings/${encodeURIComponent(code)}/overturn`, { comment });
 export const validateDiff = (p: { repository: string; baseSha: string; headSha: string }) =>
   post<PreflightResult & { findings: Finding[]; receiptId: string }>('/v1/evaluations/diff', p);
-export const getDemo = () => get<{ repository: string; baseSha: string; headSha: string; title: string }>('/v1/demo');
+export interface DemoChange { baseSha: string; headSha: string; title: string }
+export const getDemo = () => get<DemoChange & { repository: string; semantic?: DemoChange }>('/v1/demo');
 
 // ---- exceptions ----
 export interface ExceptionRequest {

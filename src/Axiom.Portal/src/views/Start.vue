@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { countGovernance, getDemo, preflight, validateDiff, type Finding, type PreflightResult } from '../api';
+import { countGovernance, getDemo, preflight, validateDiff, type DemoChange, type Finding, type PreflightResult } from '../api';
 import { verdictClass, verdictLabel } from '../verdict';
 import { accessToken } from '../auth';
 
@@ -32,14 +32,15 @@ async function run() {
 }
 
 // 3. validate a pull request (the bundled demo change)
-const demo = ref<{ repository: string; baseSha: string; headSha: string; title: string } | null>(null);
+const demo = ref<(DemoChange & { repository: string; semantic?: DemoChange }) | null>(null);
 const diff = ref<(PreflightResult & { findings: Finding[]; receiptId: string }) | null>(null);
 const diffError = ref('');
 const checking = ref(false);
-async function checkDiff() {
+async function checkDiff(change?: DemoChange) {
   if (!demo.value) return;
+  const target = change ?? demo.value;
   checking.value = true; diffError.value = ''; diff.value = null;
-  try { diff.value = await validateDiff({ repository: demo.value.repository, baseSha: demo.value.baseSha, headSha: demo.value.headSha }); }
+  try { diff.value = await validateDiff({ repository: demo.value.repository, baseSha: target.baseSha, headSha: target.headSha }); }
   catch (e) { diffError.value = (e as Error).message; } finally { checking.value = false; }
 }
 
@@ -115,12 +116,17 @@ const mcpConfig = JSON.stringify({ mcpServers: { axiom: { type: 'http', url: mcp
     <h2 id="s3">3. Check a pull request</h2>
     <template v-if="demo">
       <p class="muted">The demo code repository has a branch with one change: <em>{{ demo.title }}</em>. It makes the Gateway query the database directly, which decision ARCH-001 forbids. Axiom checks the actual code, not the plan.</p>
-      <button :disabled="checking" @click="checkDiff">Validate this change</button>
+      <button :disabled="checking" @click="checkDiff()">Validate this change</button>
+      <template v-if="demo.semantic">
+        <p class="muted">A second branch, <em>{{ demo.semantic.title }}</em>, does the same thing without importing a database driver, so no deterministic rule fires. Only the semantic analyzer can notice it, and it can only ask for a review, never block.</p>
+        <button :disabled="checking" @click="checkDiff(demo.semantic)">Validate the second change</button>
+      </template>
       <p v-if="diffError" class="err" role="alert">{{ diffError }}</p>
       <article v-if="diff" class="card">
         <p>Result: <strong :class="verdictClass(diff.verdict)">{{ verdictLabel(diff.verdict) }}</strong></p>
         <div v-for="f in diff.findings" :key="f.code + f.message">
-          <p><strong :class="verdictClass(f.severity)">{{ f.severity }}</strong> {{ f.message }}</p>
+          <p><strong :class="verdictClass(f.severity)">{{ f.severity }}</strong> {{ f.message }}
+            <span v-if="f.source === 'semantic'" class="muted"> (semantic suggestion<template v-if="f.confidence != null">, confidence {{ Math.round(f.confidence * 100) }}%</template>)</span></p>
           <p v-if="f.recommendedAction" class="muted">What to do: {{ f.recommendedAction }}</p>
         </div>
         <button class="link" @click="$emit('openEvaluation', diff.evaluationId)">Open the evaluation: review it, overturn a finding, or request an exception</button>

@@ -24,9 +24,17 @@ internal static class DemoEndpoints
             using var repository = new Repository(path);
             var main = repository.Branches["main"]?.Tip;
             var feature = repository.Branches["feature/role-routing"]?.Tip;
+            var semantic = repository.Branches["feature/role-lookup"]?.Tip;
             return main is null || feature is null
                 ? Results.NotFound()
-                : Results.Ok(new { repository = name, baseSha = main.Sha, headSha = feature.Sha, title = feature.MessageShort });
+                : Results.Ok(new
+                {
+                    repository = name,
+                    baseSha = main.Sha,
+                    headSha = feature.Sha,
+                    title = feature.MessageShort,
+                    semantic = semantic is null ? null : new { baseSha = main.Sha, headSha = semantic.Sha, title = semantic.MessageShort },
+                });
         }).WithName("demoInfo");
         return routes;
     }

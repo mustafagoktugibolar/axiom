@@ -3,6 +3,7 @@ using System.Globalization;
 using Axiom.Application.Common;
 using Axiom.Application.Policy;
 using Axiom.Application.Review;
+using Axiom.Application.Semantic;
 using Axiom.Domain.Evaluation;
 using Axiom.Domain.Governance;
 using Axiom.Domain.Review;
@@ -47,7 +48,8 @@ public sealed class DiffEvaluationService(
     PolicyEngine policy,
     IPolicyRuleCatalog catalog,
     IEvaluationStore evaluations,
-    IReviewStore reviews)
+    IReviewStore reviews,
+    SemanticAnalyzer? semantic = null)
 {
     public const string RevalidateDesign = "Validate a design that covers the full scope of this change with governance.validate_design, then validate the diff again with that design evaluation.";
     public const string RequestDesign = "Produce a design for this significant change and validate it with governance.validate_design, then validate the diff again with that design evaluation.";
@@ -106,6 +108,7 @@ public sealed class DiffEvaluationService(
                     "design-clearance:" + (design?.Clearance.State.ToString() ?? "none"),
                     "design-significance-override:" + (design?.Overridden ?? false),
                     "truncated:" + diff.Truncated,
+                    semantic?.Fingerprint ?? "semantic:off",
                 ],
             },
             cancellationToken);
@@ -115,6 +118,7 @@ public sealed class DiffEvaluationService(
             AnalyzeDesignLineage(session, design);
             AddTruncationFinding(session, diff);
             RunPolicies(session, diff);
+            await RunSemanticsAsync(session, diff, cancellationToken);
 
             foreach (var finding in session.Findings.Where(f => !f.IsWaived && f.Severity >= EnforcementLevel.RequireReview && f.RecommendedAction is not null))
             {
@@ -254,6 +258,24 @@ public sealed class DiffEvaluationService(
         session.Findings.AddRange(evaluation.Findings);
         activity?.SetTag("axiom.policy.runs", evaluation.Results.Length);
         activity?.SetTag("axiom.policy.findings", evaluation.Findings.Length);
+    }
+
+    /// <summary>
+    /// Semantic analysis comes last, after deterministic scope and policy results (ADR-0002). Its findings are
+    /// advisory (never BLOCK), and an unavailable or forbidden provider only changes the reported coverage (R24).
+    /// </summary>
+    private async Task RunSemanticsAsync(EvaluationSession session, ScmDiff diff, CancellationToken cancellationToken)
+    {
+        if (semantic is null)
+        {
+            return;
+        }
+
+        var outcome = await semantic.AnalyzeAsync(
+            new SemanticInput(session.Context.RepositoryName, session.Request.Task, session.Resolution, diff.Files),
+            cancellationToken);
+        session.SemanticCoverage = outcome.Coverage;
+        session.Findings.AddRange(outcome.Findings);
     }
 
     /// <summary>Identifies the exact rule set (IDs and versions) so a rule change yields a new evaluation, never a cached one.</summary>

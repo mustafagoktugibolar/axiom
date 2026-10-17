@@ -56,6 +56,10 @@ governance:
 
 # Extra settings rendered into the ConfigMap as environment variables, for example
 #   Axiom__Scm__AllowedHosts__0: github.com
+#
+# Semantic analysis is off by default. To try it without a model:   Axiom__Semantic__Enabled: "true"
+# With a hosted model (put the key in axiom-secrets, not here):       Axiom__Semantic__Provider: Anthropic
+#                                                                      Axiom__Semantic__Anthropic__ApiKey: <from the Secret>
 config: {}
 
 api:
