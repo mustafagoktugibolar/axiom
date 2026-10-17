@@ -37,6 +37,23 @@ internal static class GovernanceEndpoints
                 },
                 ct)).WithName("searchGovernance");
 
+        governance.MapGet("/graph", async (
+            AxiomPrincipal principal, GovernanceGraphService service, string? focus, int? depth, int? maxNodes, int? maxEdges, string? kind, string? status, string? scope,
+            CancellationToken ct) =>
+            await service.GetAsync(
+                principal,
+                new GovernanceGraphRequest
+                {
+                    Focus = focus,
+                    Depth = depth,
+                    MaxNodes = maxNodes,
+                    MaxEdges = maxEdges,
+                    Kinds = ParseList<RecordKind>(kind, "kind"),
+                    Statuses = ParseList<LifecycleStatus>(status, "status"),
+                    Scope = ParseScope(scope),
+                },
+                ct)).WithName("getGovernanceGraph");
+
         governance.MapGet("/{id}", async (string id, bool? includeRationale, AxiomPrincipal principal, GovernanceReadService service, CancellationToken ct) =>
             await service.GetAsync(principal, id, includeRationale ?? false, ct)).WithName("getGovernanceRecord");
 
@@ -52,6 +69,20 @@ internal static class GovernanceEndpoints
             await service.ExplainAsync(principal, id, code, path, ct)).WithTags("Evaluations").WithName("explainFinding");
 
         return routes;
+    }
+
+    /// <summary>Parses "dimension:value" (for example "repository:gateway").</summary>
+    private static ImmutableDictionary<ScopeDimension, string> ParseScope(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return ImmutableDictionary<ScopeDimension, string>.Empty;
+        }
+
+        var parts = value.Split(':', 2, StringSplitOptions.TrimEntries);
+        return parts.Length == 2 && parts[1].Length > 0 && Enum.TryParse<ScopeDimension>(parts[0], ignoreCase: true, out var dimension) && Enum.IsDefined(dimension)
+            ? ImmutableDictionary<ScopeDimension, string>.Empty.Add(dimension, parts[1])
+            : throw AxiomException.Invalid("'scope' must look like 'repository:gateway'.");
     }
 
     private static ImmutableArray<T> ParseList<T>(string? value, string name)

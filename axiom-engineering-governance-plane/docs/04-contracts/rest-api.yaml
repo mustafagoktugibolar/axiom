@@ -102,6 +102,39 @@ paths:
       responses:
         '200':
           description: Governance search results
+  /v1/governance/graph:
+    get:
+      operationId: getGovernanceGraph
+      summary: Decision graph (records as nodes, relations as edges), bounded
+      security:
+        - oauth2: [axiom.read]
+      parameters:
+        - in: query
+          name: focus
+          description: Record ID to center the graph on
+          schema: { type: string }
+        - in: query
+          name: depth
+          schema: { type: integer, minimum: 1, maximum: 5, default: 2 }
+        - in: query
+          name: maxNodes
+          schema: { type: integer, minimum: 1, maximum: 300, default: 100 }
+        - in: query
+          name: maxEdges
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 400 }
+        - in: query
+          name: kind
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: scope
+          description: dimension:value, for example repository:gateway
+          schema: { type: string }
+      responses:
+        '200':
+          description: Graph with nodes (lifecycle status, authority level) and edges (supersedes, refines, conflictsWith, related, ...)
   /v1/governance/{id}:
     get:
       operationId: getGovernanceRecord

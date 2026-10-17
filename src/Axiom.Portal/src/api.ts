@@ -137,6 +137,15 @@ export interface GraphData {
 }
 export const getGraph = (focus?: string) => get<GraphData>('/v1/graph', { focus, depth: 3, maxNodes: 120 });
 
+// ---- decision graph ----
+export interface DecisionGraphData {
+  truncated: boolean; focus: string | null; depth: number;
+  nodes: { id: string; kind: string; title: string; status: string; authoritative: boolean; authorityLevel: string; focus: boolean }[];
+  edges: { from: string; relation: string; to: string }[];
+}
+export const getDecisionGraph = (p: { focus?: string; depth?: number; kind?: string; status?: string; scope?: string }) =>
+  get<DecisionGraphData>('/v1/governance/graph', { ...p, kind: p.kind || undefined, status: p.status || undefined });
+
 // ---- onboarding ----
 export interface SourceStatus {
   configured: boolean;

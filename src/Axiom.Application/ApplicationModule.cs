@@ -24,6 +24,7 @@ public static class ApplicationModule
         services.AddScoped<PullRequestStatusReporter>();
         services.AddScoped<ExceptionRequestService>();
         services.AddScoped<GovernanceReadService>();
+        services.AddScoped<GovernanceGraphService>();
         services.AddScoped<ImpactService>();
         services.AddScoped<ReceiptService>();
         services.AddScoped<ContextService>();
