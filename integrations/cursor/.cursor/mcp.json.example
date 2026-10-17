@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "axiom": {
+      "url": "https://axiom.example.com/mcp",
+      "headers": { "Authorization": "Bearer ${env:AXIOM_TOKEN}" }
+    }
+  }
+}

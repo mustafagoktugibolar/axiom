@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Axiom: call governance.preflight_change before designing or editing; stop on REQUIRE_REVIEW, DENY or error (see AGENTS.md).'"
+            "command": "echo 'Axiom: call governance.preflight_change before designing or editing; stop on REQUIRE_REVIEW, BLOCK or error (see AGENTS.md).'"
           }
         ]
       }
