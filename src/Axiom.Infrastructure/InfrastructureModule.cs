@@ -36,6 +36,7 @@ public static class InfrastructureModule
         services.AddScoped<IEventOutbox, EfEventOutbox>();
         services.AddScoped<IEvaluationStore, EfEvaluationStore>();
         services.AddScoped<IReviewStore, EfReviewStore>();
+        services.AddScoped<Application.Semantic.ISemanticFeedbackStore, EfSemanticFeedbackStore>();
         services.AddScoped<IExceptionRequestStore, EfExceptionRequestStore>();
 
         services.AddHealthChecks().AddCheck<SchemaHealthCheck>("postgresql", tags: ["ready"]);

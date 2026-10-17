@@ -3,6 +3,7 @@ using Axiom.Application.Common;
 using Axiom.Application.Evaluation;
 using Axiom.Application.Query;
 using Axiom.Application.Review;
+using Axiom.Application.Semantic;
 using Axiom.Domain.Audit;
 using Axiom.Domain.Evaluation;
 
@@ -101,6 +102,9 @@ internal static class EvaluationEndpoints
 
         routes.MapGet("/v1/reviews/pending", async (AxiomPrincipal principal, ReviewService reviews, int? skip, int? take, CancellationToken ct) =>
             await reviews.ListPendingAsync(principal, skip ?? 0, take ?? 50, ct)).WithTags("Reviews").WithName("listPendingReviews");
+
+        routes.MapGet("/v1/semantic/metrics", async (AxiomPrincipal principal, SemanticMetricsService metrics, DateTimeOffset? from, DateTimeOffset? to, CancellationToken ct) =>
+            await metrics.GetAsync(principal, from, to, ct)).WithTags("Semantic").WithName("getSemanticMetrics");
 
         var receipts = routes.MapGroup("/v1/receipts").WithTags("Receipts");
 

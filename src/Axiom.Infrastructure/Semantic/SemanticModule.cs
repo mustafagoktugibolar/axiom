@@ -22,6 +22,7 @@ public static class SemanticModule
 
         var section = configuration.GetSection(SemanticOptions.SectionName);
         services.AddOptions<SemanticOptions>().Bind(section);
+        services.AddOptions<SemanticCalibrationOptions>().Bind(configuration.GetSection(SemanticCalibrationOptions.SectionName));
         services.AddOptions<AnthropicOptions>().Bind(configuration.GetSection(AnthropicOptions.SectionName));
 
         var semantic = section.Get<SemanticOptions>() ?? new SemanticOptions();

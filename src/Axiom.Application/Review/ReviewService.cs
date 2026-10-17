@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Axiom.Application.Common;
 using Axiom.Application.Evaluation;
+using Axiom.Application.Semantic;
 using Axiom.Domain.Evaluation;
 using Axiom.Domain.Review;
 
@@ -89,11 +90,21 @@ public sealed class ReviewService(IEvaluationStore evaluations, IReviewStore rev
         var decision = await AppendAsync(principal, stored.Evaluation, ReviewKind.FindingOverturn, ReviewOutcome.Rejected, finding.Code, request.Comment, cancellationToken);
         if (finding.Source == FindingSource.Semantic)
         {
-            AxiomTelemetry.SemanticOverturns.Add(1, new KeyValuePair<string, object?>("code", finding.Code));
+            // Provider, model, confidence and governance ids stay reachable through the evaluation the decision points at
+            // (EfSemanticFeedbackStore joins them), so the append-only decision row is the persisted feedback (task 7.10).
+            var (provider, model) = SemanticFindingInfo.ProviderOf(finding);
+            AxiomTelemetry.SemanticOverturns.Add(1,
+                new KeyValuePair<string, object?>("code", finding.Code),
+                new KeyValuePair<string, object?>("provider", provider),
+                new KeyValuePair<string, object?>("model", model),
+                new KeyValuePair<string, object?>("confidence_band", ConfidenceBandLabel(finding.Confidence)));
         }
 
         return decision;
     }
+
+    private static string ConfidenceBandLabel(double? confidence) =>
+        confidence is { } c ? (Math.Floor(Math.Clamp(c, 0, 0.999) * 10) / 10).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) : "none";
 
     /// <summary>Overrides a "significant change" classification so that no formal design is required.</summary>
     public async Task<ReviewDecision> OverrideClassificationAsync(AxiomPrincipal principal, string evaluationId, string comment, CancellationToken cancellationToken)

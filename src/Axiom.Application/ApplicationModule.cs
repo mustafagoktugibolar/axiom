@@ -21,6 +21,8 @@ public static class ApplicationModule
         services.AddScoped<DesignValidationService>();
         services.AddOptions<SemanticOptions>();
         services.AddScoped<SemanticAnalyzer>();
+        services.AddOptions<SemanticCalibrationOptions>();
+        services.AddScoped<SemanticMetricsService>();
         services.AddScoped<DiffEvaluationService>();
         services.AddScoped<PullRequestStatusReporter>();
         services.AddScoped<ExceptionRequestService>();
