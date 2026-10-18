@@ -18,6 +18,7 @@
     <ProjectReference Include="../../src/Axiom.Application/Axiom.Application.csproj" />
     <ProjectReference Include="../../src/Axiom.Infrastructure/Axiom.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Axiom.Workers/Axiom.Workers.csproj" />
+    <ProjectReference Include="../../src/Axiom.Api/Axiom.Api.csproj" />
     <ProjectReference Include="../../src/Axiom.PolicyRunner/Axiom.PolicyRunner.csproj" />
   </ItemGroup>
   <ItemGroup>

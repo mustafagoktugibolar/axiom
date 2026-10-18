@@ -16,7 +16,7 @@ onMounted(load);
 // Layered layout: one column per kind, in the order a person reads a system (who owns it -> where it runs).
 const order = ['domain', 'system', 'component', 'api', 'repo', 'resource', 'team', 'user'];
 const colour: Record<string, string> = {
-  domain: '#8250df', system: '#0969da', component: '#1a7f37', api: '#bf8700', repo: '#cf222e', resource: '#6e7781', team: '#bc4c00', user: '#6e7781',
+  domain: '#8250df', system: '#0969da', component: '#1a7f37', api: '#8a6100', repo: '#cf222e', resource: '#6e7781', team: '#bc4c00', user: '#6e7781',
 };
 const W = 150, H = 38, GAPX = 70, GAPY = 18;
 
@@ -36,13 +36,13 @@ const related = computed(() => (data.value?.edges ?? []).filter(e => e.from === 
   <h1>System graph</h1>
   <p class="muted">How domains, systems, components and repositories relate. Solid lines are declared facts, dashed ones are inferred. Click a box for details.</p>
   <form class="row" @submit.prevent="load">
-    <input v-model="focus" placeholder="Focus on an entity, e.g. component:gui-platform/api-gateway" aria-label="Focus" size="50" />
+    <input v-model="focus" placeholder="Focus on an entity, e.g. component:gui-platform/api-gateway" aria-label="Focus on an entity" size="50" />
     <button type="submit">Show</button>
   </form>
   <p v-if="error" class="err" role="alert">{{ error }}</p>
   <p v-else-if="data && !data.nodes.length" class="warn">The graph is empty. Axiom reads <code>.axiom/catalog.yaml</code> from the registered governance repository; check the worker log.</p>
   <div v-if="data && data.nodes.length" class="graph">
-    <svg :width="layout.width" :height="layout.height" role="img" aria-label="System graph">
+    <svg :width="layout.width" :height="layout.height" role="group" aria-label="System graph. The relations table below has the same information as text.">
       <defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6e7781" /></marker></defs>
       <text v-for="(k, i) in layout.kinds" :key="k" :x="10 + i * (W + GAPX)" y="16" class="colhead">{{ k }}</text>
       <template v-for="e in data.edges" :key="e.from + e.relation + e.to">
@@ -51,14 +51,27 @@ const related = computed(() => (data.value?.edges ?? []).filter(e => e.from === 
             stroke="#6e7781" :stroke-dasharray="e.fact ? undefined : '4 3'" marker-end="url(#arrow)" :opacity="!picked || e.from === picked || e.to === picked ? 1 : 0.15" />
         </g>
       </template>
-      <g v-for="n in data.nodes" :key="n.id" class="node" tabindex="0" role="button" :aria-label="n.title" @click="picked = n.id" @keydown.enter="picked = n.id">
+      <g v-for="n in data.nodes" :key="n.id" class="node" tabindex="0" role="button" :aria-label="`${n.title}, ${n.kind}`" :aria-pressed="picked === n.id" @click="picked = n.id" @keydown.enter.prevent="picked = n.id" @keydown.space.prevent="picked = n.id">
         <rect :x="layout.pos.get(n.id)!.x" :y="layout.pos.get(n.id)!.y" :width="W" :height="H" rx="6" :fill="colour[n.kind] ?? '#6e7781'" :opacity="!picked || n.id === picked || related.some(r => r.from === n.id || r.to === n.id) ? 1 : 0.35" />
         <text :x="layout.pos.get(n.id)!.x + 8" :y="layout.pos.get(n.id)!.y + 24" fill="#fff" font-size="12">{{ n.title.length > 20 ? n.title.slice(0, 19) + '…' : n.title }}</text>
       </g>
     </svg>
   </div>
   <p v-if="data?.truncated" class="warn">Showing a subset; focus on an entity to see more.</p>
-  <article v-if="selectedNode" class="card">
+  <section v-if="data && data.nodes.length">
+    <h2>Relations</h2>
+    <p v-if="!data.edges.length" class="muted">No relations between these entities.</p>
+    <table v-else>
+      <caption class="muted">{{ data.edges.length }} relation(s) between {{ data.nodes.length }} entities</caption>
+      <thead><tr><th scope="col">From</th><th scope="col">Relation</th><th scope="col">To</th><th scope="col">Basis</th></tr></thead>
+      <tbody>
+        <tr v-for="e in data.edges" :key="e.from + e.relation + e.to">
+          <td>{{ e.from }}</td><td><strong>{{ e.relation }}</strong></td><td>{{ e.to }}</td><td>{{ e.fact ? 'declared' : 'inferred' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+  <article v-if="selectedNode" class="card" aria-live="polite">
     <h2>{{ selectedNode.title }}</h2>
     <p class="muted">{{ selectedNode.id }}<template v-if="selectedNode.technologies.length"> · {{ selectedNode.technologies.join(', ') }}</template></p>
     <ul><li v-for="e in related" :key="e.from + e.relation + e.to">{{ e.from }} <strong>{{ e.relation }}</strong> {{ e.to }} <span v-if="!e.fact" class="warn">(inferred)</span></li></ul>

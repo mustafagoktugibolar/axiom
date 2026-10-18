@@ -86,7 +86,7 @@ const mcpConfig = JSON.stringify({ mcpServers: { axiom: { type: 'http', url: mcp
       <button type="submit" :disabled="running">Run preflight</button>
     </form>
     <p v-if="error" class="err" role="alert">{{ error }}</p>
-    <article v-if="result" class="card">
+    <article v-if="result" class="card" aria-live="polite">
       <p>Result: <strong :class="verdictClass(result.verdict)">{{ verdictLabel(result.verdict) }}</strong>
         · significant change: {{ result.significantChange ? 'yes' : 'no' }}</p>
       <template v-if="result.significanceTriggers.length">

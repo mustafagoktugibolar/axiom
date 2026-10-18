@@ -39,7 +39,17 @@ const redirectUri = () => `${location.origin}${location.pathname}`;
 async function discover(authority: string): Promise<{ authorization_endpoint: string; token_endpoint: string }> {
   const res = await fetch(`${authority.replace(/\/$/, '')}/.well-known/openid-configuration`);
   if (!res.ok) throw new Error('Could not reach the identity provider.');
-  return res.json();
+  const meta = await res.json() as { authorization_endpoint: string; token_endpoint: string };
+  // The endpoints come from the network: require https (or loopback for local IdPs) before sending a code, verifier or redirect there.
+  for (const endpoint of [meta.authorization_endpoint, meta.token_endpoint]) assertSecureEndpoint(endpoint);
+  return meta;
+}
+
+function assertSecureEndpoint(endpoint: string): void {
+  let u: URL;
+  try { u = new URL(endpoint); } catch { throw new Error('The identity provider returned an invalid endpoint.'); }
+  const loopback = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || u.hostname === '[::1]';
+  if (u.protocol !== 'https:' && !(u.protocol === 'http:' && loopback)) throw new Error('The identity provider returned an insecure endpoint.');
 }
 
 export async function signIn(config: AuthConfig, name?: string): Promise<void> {
@@ -68,7 +78,11 @@ export async function signIn(config: AuthConfig, name?: string): Promise<void> {
 export async function completeSignIn(): Promise<boolean> {
   const params = new URLSearchParams(location.search);
   const code = params.get('code');
-  if (!code) return false;
+  if (!code) {
+    // An IdP error response carries no code. Drop the query (it can echo state) and report a fixed message, never the raw description.
+    if (params.has('error') && params.has('state')) { store.del(PENDING); history.replaceState(null, '', location.pathname); throw new Error('The identity provider did not complete sign-in.'); }
+    return false;
+  }
   const pendingRaw = store.get(PENDING);
   store.del(PENDING);
   history.replaceState(null, '', location.pathname);

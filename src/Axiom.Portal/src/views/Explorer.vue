@@ -33,7 +33,8 @@ async function search() {
   <p v-else-if="searched && !items.length" class="muted">No records match.</p>
   <p v-if="items.length" class="muted">{{ items.length }} of {{ total }}</p>
   <table v-if="items.length">
-    <thead><tr><th>Record</th><th>Kind</th><th>Status</th><th>Owners</th></tr></thead>
+    <caption class="muted">Governance records</caption>
+    <thead><tr><th scope="col">Record</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col">Owners</th></tr></thead>
     <tbody>
       <tr v-for="r in items" :key="r.id">
         <td><button class="link" @click="$emit('open', r.id)">{{ r.id }}</button><div>{{ r.title }}</div>
