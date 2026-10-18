@@ -50,6 +50,8 @@ public sealed class CustomRuleSpec
     public const int MaxChecks = 20;
     public const int MaxPatternCharacters = 1_000;
     public const int MaxParameters = 20;
+    public const int MaxTextCharacters = 1_000;
+    public const int MaxSelectorCharacters = 500;
 
     private static readonly string[] KindNames = ["added", "modified", "deleted", "renamed"];
 
@@ -80,7 +82,7 @@ public sealed class CustomRuleSpec
 
         try
         {
-            using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });
+            using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16, AllowDuplicateProperties = false });
             return ParseRoot(document.RootElement);
         }
         catch (JsonException ex)
@@ -116,14 +118,26 @@ public sealed class CustomRuleSpec
             }
         }
 
-        string? Sub(string? text) => text is null ? null : Substitute(text, values);
-        ImmutableArray<string> SubAll(ImmutableArray<string> items) => [.. items.Select(i => Substitute(i, values))];
+        // Substituted text is bounded like literal text: a long parameter value must not grow a pattern, glob or message past its cap.
+        string? Sub(string? text, int cap) => text is null ? null : Capped(Substitute(text, values), cap);
+        ImmutableArray<string> SubAll(ImmutableArray<string> items) => [.. items.Select(i => Capped(Substitute(i, values), MaxSelectorCharacters))];
 
         return new CustomRuleSpec(
             Parameters,
             Selection with { Paths = SubAll(Selection.Paths), Exclude = SubAll(Selection.Exclude) },
-            [.. Checks.Select(c => c with { Message = Sub(c.Message), Pattern = Sub(c.Pattern), Path = Sub(c.Path), Value = Sub(c.Value) })]);
+            [.. Checks.Select(c => c with
+            {
+                Message = Sub(c.Message, MaxTextCharacters),
+                Pattern = Sub(c.Pattern, MaxPatternCharacters),
+                Path = Sub(c.Path, MaxTextCharacters),
+                Value = Sub(c.Value, MaxTextCharacters),
+            })]);
     }
+
+    private static string Capped(string text, int cap) =>
+        text.Length <= cap
+            ? text
+            : throw new CustomRuleException(CustomRuleCodes.InvalidParameters, $"A parameter value makes a rule field longer than {cap} characters.");
 
     internal static Regex CompileRegex(string pattern, TimeSpan timeout)
     {

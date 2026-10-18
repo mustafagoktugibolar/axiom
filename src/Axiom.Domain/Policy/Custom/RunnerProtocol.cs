@@ -46,6 +46,7 @@ public static class RunnerProtocol
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         MaxDepth = 32,
+        AllowDuplicateProperties = false,
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
     };
 
@@ -71,7 +72,34 @@ public static class RunnerProtocol
             throw new PolicyRuleExecutionException(CustomRuleCodes.BadRequest, "The request is incomplete or has an unsupported protocol version.");
         }
 
+        ValidateShape(request);
         return request;
+    }
+
+    /// <summary>
+    /// Rejects anything the evaluator must not have to reason about: nulls inside collections, control characters,
+    /// and paths that climb with <c>..</c> (a repository cannot contain them; accepting them would let a name evade a selector).
+    /// </summary>
+    private static void ValidateShape(RunnerRequest request)
+    {
+        var changes = request.Context.Changes;
+        if (changes.Any(c => c is null || !IsSafePath(c.Path) || (c.PreviousPath is not null && !IsSafePath(c.PreviousPath)))
+            || request.Context.TreePaths.Any(p => !IsSafePath(p))
+            || request.Parameters.Any(p => p.Value is null)
+            || changes.Any(c => c.AddedLines is not null && c.AddedLines.Any(l => l is null || l.Number < 1 || l.Text is null)))
+        {
+            throw new PolicyRuleExecutionException(CustomRuleCodes.BadRequest, "The request contains a missing value, an invalid path or an invalid line number.");
+        }
+    }
+
+    private static bool IsSafePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || path.Any(char.IsControl))
+        {
+            return false;
+        }
+
+        return !path.Replace('\\', '/').Split('/').Contains("..", StringComparer.Ordinal);
     }
 
     /// <summary>Parses and validates a runner response; anything out of bounds is <see cref="CustomRuleCodes.MalformedOutput"/>.</summary>
@@ -184,6 +212,12 @@ public static class CustomRuleRunnerCore
         catch (PolicyRuleExecutionException ex)
         {
             return Error(ex.Code, ex.Message);
+        }
+#pragma warning disable CA1031 // Defense in depth: whatever the evaluator did not anticipate is a coded crash, never an unhandled exception that skips the protocol.
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+#pragma warning restore CA1031
+        {
+            return Error(CustomRuleCodes.Crash, "The rule evaluation failed unexpectedly.");
         }
     }
 

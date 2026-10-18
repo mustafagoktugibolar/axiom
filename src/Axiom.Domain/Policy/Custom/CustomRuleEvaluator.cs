@@ -72,8 +72,8 @@ public static class CustomRuleEvaluator
 
     private static List<ChangedFile> Select(CustomSelection selection, IEnumerable<ChangedFile> changes, Run run)
     {
-        var include = selection.Paths.Select(GlobPattern.Parse).ToArray();
-        var exclude = selection.Exclude.Select(GlobPattern.Parse).ToArray();
+        var include = selection.Paths.Select(ParseGlob).ToArray();
+        var exclude = selection.Exclude.Select(ParseGlob).ToArray();
         var result = new List<ChangedFile>();
         foreach (var change in changes)
         {
@@ -158,7 +158,7 @@ public static class CustomRuleEvaluator
 
     private static void RequireFile(CustomCheck check, IReadOnlyCollection<string> treePaths, Run run)
     {
-        var glob = GlobPattern.Parse(check.Path!);
+        var glob = ParseGlob(check.Path!);
         foreach (var path in treePaths)
         {
             run.Spend(path.Length + 1);
@@ -211,6 +211,18 @@ public static class CustomRuleEvaluator
             {
                 run.Add(new PolicyViolation($"'{change.Path}' is not valid JSON, so the JSON path check could not be evaluated.", change.Path));
             }
+        }
+    }
+
+    private static GlobPattern ParseGlob(string pattern)
+    {
+        try
+        {
+            return GlobPattern.Parse(pattern);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new CustomRuleException("A path selector is empty or not a valid glob.", ex);
         }
     }
 
