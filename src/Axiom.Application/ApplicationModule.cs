@@ -30,6 +30,9 @@ public static class ApplicationModule
         services.AddScoped<ExceptionRequestService>();
         services.AddScoped<CandidateService>();
         services.AddScoped<AdrImportService>();
+        services.AddScoped<DocsScanService>();
+        services.AddScoped<ReviewCommentMiningService>();
+        services.AddScoped<PostmortemImportService>();
         services.AddScoped<GovernanceCoverageService>();
         services.AddScoped<GovernanceReadService>();
         services.AddOptions<GovernanceHealthOptions>();
