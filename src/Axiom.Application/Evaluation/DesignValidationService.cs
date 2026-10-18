@@ -127,6 +127,73 @@ public sealed class DesignValidationService(EvaluationPipeline pipeline, ISystem
 
         var repositorySystems = session.Context.Topology?.Systems.Select(s => s.Name).ToImmutableArray() ?? [];
         var unowned = session.AffectedDependencies.Where(d => d.IsFact && d.Owners.IsEmpty).Select(d => d.Entity).ToImmutableArray();
-        return new DesignTopology(repositorySystems, unknownSystems.ToImmutable(), unknownRepositories.ToImmutable(), unowned);
+        var facts = await GatherFactsAsync(organization, design, session, cancellationToken);
+        return new DesignTopology(repositorySystems, unknownSystems.ToImmutable(), unknownRepositories.ToImmutable(), unowned) { Facts = facts };
+    }
+
+    /// <summary>Upper bound on components expanded for the depth checks, keeping the design gate's graph cost bounded.</summary>
+    public const int MaxExpandedComponents = 25;
+
+    private static readonly ImmutableArray<RelationType> OutgoingRelations =
+        [RelationType.DependsOn, RelationType.Consumes, RelationType.StoresIn, RelationType.PublishesTo, RelationType.SubscribesTo];
+
+    private async Task<DesignTopologyFacts> GatherFactsAsync(string organization, DesignDocument design, EvaluationSession session, CancellationToken cancellationToken)
+    {
+        var depth = EvaluationPipeline.DependencyDepth;
+        var repositories = ImmutableArray.CreateBuilder<DeclaredRepositoryFacts>();
+        var scope = new HashSet<EntityRef>();
+        var components = new SortedSet<EntityRef>();
+
+        if (session.Context.Topology is { } requested)
+        {
+            scope.UnionWith(requested.Components.Concat(requested.Apis).Concat(requested.Resources).Concat(requested.Systems).Append(requested.Repository));
+            components.UnionWith(requested.Components);
+        }
+
+        foreach (var name in design.AffectedRepositories.Order(StringComparer.Ordinal))
+        {
+            if (await graph.ResolveRepositoryAsync(organization, name, cancellationToken) is not { } repository)
+            {
+                continue;
+            }
+
+            var topology = await graph.GetRepositoryTopologyAsync(organization, repository, cancellationToken);
+            repositories.Add(new DeclaredRepositoryFacts(name, repository, topology.Components));
+            scope.UnionWith(topology.Components.Concat(topology.Apis).Concat(topology.Resources).Concat(topology.Systems).Append(repository));
+            components.UnionWith(topology.Components);
+        }
+
+        var dependents = new SortedDictionary<EntityRef, AffectedDependency>();
+        var connected = new HashSet<EntityRef>(scope);
+        foreach (var component in components.Take(MaxExpandedComponents))
+        {
+            var upstream = await graph.TraverseAsync(organization, new ImpactQuery(component, TraversalDirection.Upstream, [RelationType.DependsOn], depth, true), cancellationToken);
+            foreach (var impacted in upstream.Impacted.Where(i => !scope.Contains(i.Entity)))
+            {
+                connected.Add(impacted.Entity);
+                if (dependents.TryGetValue(impacted.Entity, out var known) && known.Depth <= impacted.Depth)
+                {
+                    continue;
+                }
+
+                var owners = upstream.Owners.TryGetValue(impacted.Entity, out var o) ? o.Select(x => x.ToString()).ToImmutableArray() : [];
+                dependents[impacted.Entity] = new AffectedDependency(
+                    impacted.Entity.ToString(), impacted.Depth, [.. impacted.Path.Select(s => $"{s.From} -{s.Relation}-> {s.To}")], owners, impacted.IsFact);
+            }
+
+            var downstream = await graph.TraverseAsync(organization, new ImpactQuery(component, TraversalDirection.Downstream, OutgoingRelations, depth, true), cancellationToken);
+            connected.UnionWith(downstream.Impacted.Select(i => i.Entity));
+        }
+
+        var references = ImmutableArray.CreateBuilder<ReferencedEntity>();
+        foreach (var reference in DesignTopologyValidator.ExtractReferences(design))
+        {
+            var known = reference.Kind == EntityKind.Repository
+                ? await graph.ResolveRepositoryAsync(organization, reference.Name, cancellationToken) is not null
+                : await graph.FindAsync(organization, reference, cancellationToken) is not null;
+            references.Add(new ReferencedEntity(reference, known, connected.Contains(reference)));
+        }
+
+        return new DesignTopologyFacts(repositories.ToImmutable(), [.. dependents.Values], references.ToImmutable(), depth);
     }
 }

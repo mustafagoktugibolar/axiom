@@ -68,9 +68,10 @@ internal sealed class FakeGraph : ISystemGraph
 
     public Task<ImpactResult> TraverseAsync(string organizationId, ImpactQuery query, CancellationToken cancellationToken)
     {
+        var upstream = query.Direction == TraversalDirection.Upstream;
         var impacted = _edges
-            .Where(e => query.Relations.Contains(e.Relation) && e.To == query.Start)
-            .Select(e => new ImpactedEntity(e.From, 1, [new PathStep(e.From, e.Relation, TraversalDirection.Upstream, e.To, true)]))
+            .Where(e => query.Relations.Contains(e.Relation) && (upstream ? e.To : e.From) == query.Start)
+            .Select(e => new ImpactedEntity(upstream ? e.From : e.To, 1, [new PathStep(e.From, e.Relation, query.Direction, e.To, true)]))
             .ToImmutableArray();
         return Task.FromResult(new ImpactResult(query.Start, impacted, ImmutableDictionary<EntityRef, ImmutableArray<EntityRef>>.Empty, false, Version));
     }

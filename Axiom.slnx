@@ -10,6 +10,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Axiom.ArchitectureTests/Axiom.ArchitectureTests.csproj" />
+    <Project Path="tests/Axiom.Benchmarks/Axiom.Benchmarks.csproj" />
     <Project Path="tests/Axiom.ContractTests/Axiom.ContractTests.csproj" />
     <Project Path="tests/Axiom.E2E/Axiom.E2E.csproj" />
     <Project Path="tests/Axiom.IntegrationTests/Axiom.IntegrationTests.csproj" />

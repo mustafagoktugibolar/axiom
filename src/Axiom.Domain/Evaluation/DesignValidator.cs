@@ -22,7 +22,11 @@ public sealed record DesignTopology(
     ImmutableArray<string> RepositorySystems,
     ImmutableArray<string> UnknownSystems,
     ImmutableArray<string> UnknownRepositories,
-    ImmutableArray<string> UnownedEntities);
+    ImmutableArray<string> UnownedEntities)
+{
+    /// <summary>Component, dependent and reference facts for the depth checks (task 6.7).</summary>
+    public DesignTopologyFacts Facts { get; init; } = DesignTopologyFacts.Empty;
+}
 
 /// <summary>
 /// Deterministic design gate (R6, design.md §8.2). Every finding names the exact section or governance
@@ -58,6 +62,7 @@ public static class DesignValidator
         ValidateContradictions(design, resolution, findings);
         ValidateUnrecordedDecisions(design, significance, findings);
         ValidateScope(design, topology, findings);
+        findings.AddRange(DesignTopologyValidator.Validate(design, topology.Facts));
         return findings.ToImmutable();
     }
 

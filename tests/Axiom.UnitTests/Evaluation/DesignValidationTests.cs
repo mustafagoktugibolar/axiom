@@ -162,6 +162,67 @@ public class DesignValidationTests
         Assert.Contains(messages, m => m.Contains("repository 'ghost-repo'", StringComparison.Ordinal));
     }
 
+    private const string Anchor = "Homepage Service resolves role/person-specific homepage configuration.";
+
+    private static string WithProposed(string extra) => SpecDesign.Replace(Anchor, Anchor + " " + extra, StringComparison.Ordinal);
+
+    [Fact]
+    public async Task Component_of_a_declared_repository_that_the_design_omits_is_flagged()
+    {
+        _graph.Bind(new RepositoryTopology(EntityRef.Parse("repo:ledger"), [EntityRef.Parse("component:fin/ledger-core")],
+            [EntityRef.Parse("system:gui-platform")], [], [], [], [], [EntityRef.Parse("team:platform")], [], []));
+
+        var (evaluation, _) = await ValidateAsync(SpecDesign.Replace("homepage-service / homepage-service", "homepage-service / ledger", StringComparison.Ordinal));
+
+        var finding = Assert.Single(evaluation.Findings, f => f.Code == DesignTopologyCodes.Mismatch);
+        Assert.Equal(EnforcementLevel.Warn, finding.Severity);
+        Assert.Contains("component:fin/ledger-core", finding.Message, StringComparison.Ordinal);
+        Assert.Contains(finding.Evidence, e => e.Source == "catalog" && e.Id == "component:fin/ledger-core");
+        Assert.NotNull(finding.RecommendedAction);
+    }
+
+    [Fact]
+    public async Task Dependent_within_the_bounded_depth_that_the_design_ignores_requires_review()
+    {
+        _graph.Edge("component:billing/invoicer", RelationType.DependsOn, "component:gui/api-gateway");
+
+        var (ignored, _) = await ValidateAsync(SpecDesign);
+        var (addressed, _) = await ValidateAsync(WithProposed("The Invoicer keeps calling the gateway unchanged."));
+
+        var finding = Assert.Single(ignored.Findings, f => f.Code == DesignTopologyCodes.Mismatch);
+        Assert.Equal(EnforcementLevel.RequireReview, finding.Severity);
+        Assert.Contains("component:billing/invoicer", finding.Message, StringComparison.Ordinal);
+        Assert.Contains(finding.RecommendedAction!, ignored.RequiredActions);
+        Assert.DoesNotContain(addressed.Findings, f => f.Code == DesignTopologyCodes.Mismatch);
+    }
+
+    [Fact]
+    public async Task Typed_reference_unknown_to_the_graph_is_reported()
+    {
+        var (evaluation, _) = await ValidateAsync(WithProposed("It also calls component:ghost/phantom."));
+
+        var finding = Assert.Single(evaluation.Findings, f => f.Code == DesignTopologyCodes.UnknownEntity);
+        Assert.Equal(EnforcementLevel.Warn, finding.Severity);
+        Assert.Contains("component:ghost/phantom", finding.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Declared_dependency_without_a_graph_edge_is_reported_and_an_edge_resolves_it()
+    {
+        _graph.Known.Add(EntityRef.Parse("component:billing/rater"));
+        var design = WithProposed("It starts depending on component:billing/rater.");
+
+        var (disconnected, _) = await ValidateAsync(design);
+        _graph.Edge("component:gui/api-gateway", RelationType.DependsOn, "component:billing/rater");
+        _graph.Version = "cv_2";
+        var (connected, _) = await ValidateAsync(design);
+
+        var finding = Assert.Single(disconnected.Findings, f => f.Code == DesignTopologyCodes.Mismatch);
+        Assert.Contains("component:billing/rater", finding.Message, StringComparison.Ordinal);
+        Assert.Contains("no relation", finding.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(connected.Findings, f => f.Code == DesignTopologyCodes.Mismatch);
+    }
+
     [Fact]
     public async Task Structured_design_is_validated_like_markdown()
     {
