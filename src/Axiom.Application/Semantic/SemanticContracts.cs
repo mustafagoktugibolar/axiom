@@ -139,4 +139,13 @@ public sealed class SemanticOptions
     public int MaxComponentChars { get; set; } = 200;
 
     public int TimeoutSeconds { get; set; } = 20;
+
+    /// <summary>
+    /// Task 7.8: derive candidate decisions from SEMANTIC_UNRECORDED_DECISION findings after an evaluation is stored.
+    /// Opt-in. A candidate is proposed and never authoritative.
+    /// </summary>
+    public bool ExtractCandidates { get; set; }
+
+    /// <summary>Findings below this confidence do not become candidates.</summary>
+    public double ExtractionMinConfidence { get; set; } = 0.8;
 }

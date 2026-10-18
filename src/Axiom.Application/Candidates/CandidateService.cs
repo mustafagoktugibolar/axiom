@@ -28,11 +28,28 @@ public sealed class CandidateService(ICandidateStore store, TimeProvider time)
     /// Stores candidates generated from an external source. Idempotent by excerpt: knowledge already captured
     /// is reported as existing and left untouched, whatever state it has reached.
     /// </summary>
-    public async Task<CandidateIngestResult> IngestAsync(AxiomPrincipal principal, IReadOnlyCollection<CandidateInput> inputs, CancellationToken cancellationToken)
+    public Task<CandidateIngestResult> IngestAsync(AxiomPrincipal principal, IReadOnlyCollection<CandidateInput> inputs, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(principal);
-        ArgumentNullException.ThrowIfNull(inputs);
         Authorizer.Demand(principal, AccessRight.ManageGovernanceSource);
+        return IngestCoreAsync(principal, inputs, cancellationToken);
+    }
+
+    /// <summary>
+    /// Task 7.8: intake for candidates the platform itself derives while serving an evaluation. The caller was
+    /// already authorized to evaluate; the result is a proposed, non-authoritative candidate, so the weaker
+    /// right suffices. Same validation and idempotency as <see cref="IngestAsync"/>.
+    /// </summary>
+    public Task<CandidateIngestResult> IngestExtractedAsync(AxiomPrincipal principal, IReadOnlyCollection<CandidateInput> inputs, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        Authorizer.Demand(principal, AccessRight.Evaluate);
+        return IngestCoreAsync(principal, inputs, cancellationToken);
+    }
+
+    private async Task<CandidateIngestResult> IngestCoreAsync(AxiomPrincipal principal, IReadOnlyCollection<CandidateInput> inputs, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(inputs);
         if (inputs.Count > MaxBatch)
         {
             throw AxiomException.Invalid($"At most {MaxBatch} candidates may be submitted at once.");

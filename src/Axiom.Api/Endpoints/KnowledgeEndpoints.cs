@@ -21,6 +21,10 @@ internal static class KnowledgeEndpoints
             return new { total, items };
         }).WithName("listCandidates");
 
+        // Read model over the candidates: duplicates grouped, one representative each. Nothing is changed or merged.
+        candidates.MapGet("/clusters", async (AxiomPrincipal principal, CandidateClusteringService service, bool? includeSingletons, CancellationToken ct) =>
+            await service.ClusterAsync(principal, includeSingletons ?? false, ct)).WithName("listCandidateClusters");
+
         candidates.MapGet("/{id}", async (string id, AxiomPrincipal principal, CandidateService service, CancellationToken ct) =>
             await service.GetAsync(principal, id, ct)).WithName("getCandidate");
 
