@@ -1,0 +1,134 @@
+{
+  "__inputs": [
+    { "name": "DS_PROMETHEUS", "label": "Prometheus", "type": "datasource", "pluginId": "prometheus", "pluginName": "Prometheus" }
+  ],
+  "title": "Axiom - SLOs and governance",
+  "uid": "axiom-slo",
+  "tags": ["axiom", "slo"],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "id": 1, "type": "row", "title": "Latency SLOs", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "panels": []
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "p95 preflight latency (SLO < 1.5 s)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "thresholdsStyle": { "mode": "line" } }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1500 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(axiom_evaluation_duration_milliseconds_bucket{stage=\"Preflight\"}[5m])))", "legendFormat": "p95" } ]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "p95 diff evaluation latency (semantic SLO < 5 s)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "thresholdsStyle": { "mode": "line" } }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 5000 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(axiom_evaluation_duration_milliseconds_bucket{stage=\"Diff\"}[5m])))", "legendFormat": "p95" } ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "p95 pull request evaluation latency (SLO < 30 s)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "thresholdsStyle": { "mode": "line" } }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 30000 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(axiom_evaluation_duration_milliseconds_bucket{stage=\"PullRequest\"}[5m])))", "legendFormat": "p95" } ]
+    },
+    {
+      "id": 5, "type": "row", "title": "Traffic and verdicts", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 }, "panels": []
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Evaluations per second by stage",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 10 },
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (stage) (rate(axiom_evaluations_total[5m]))", "legendFormat": "{{stage}}" } ]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Verdict distribution",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 10 },
+      "fieldConfig": { "defaults": { "unit": "ops", "custom": { "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (verdict) (rate(axiom_evaluations_total[5m]))", "legendFormat": "{{verdict}}" } ]
+    },
+    {
+      "id": 8, "type": "stat", "title": "Evaluation cache hit ratio (1h)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 10 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(rate(axiom_evaluation_cache_hits_total[1h])) / (sum(rate(axiom_evaluation_cache_hits_total[1h])) + sum(rate(axiom_evaluations_total[1h])))" } ]
+    },
+    {
+      "id": 9, "type": "row", "title": "Integrity and availability", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 }, "panels": []
+    },
+    {
+      "id": 10, "type": "stat", "title": "Receipt failures (1h)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 19 },
+      "fieldConfig": { "defaults": { "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(increase(axiom_receipt_failures_total[1h]))" } ]
+    },
+    {
+      "id": 11, "type": "stat", "title": "SCM status publish failures (1h)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 19 },
+      "fieldConfig": { "defaults": { "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(increase(axiom_scm_status_failures_total[1h]))" } ]
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "p95 governance projection lag (SLO < 60 s)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 19 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "thresholdsStyle": { "mode": "line" } }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 60 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(axiom_ingestion_lag_seconds_bucket[15m])))", "legendFormat": "p95" } ]
+    },
+    {
+      "id": 13, "type": "row", "title": "Governance and semantic analysis", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 }, "panels": []
+    },
+    {
+      "id": 14, "type": "timeseries", "title": "Unresolved authority conflicts per hour",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 26 },
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(increase(axiom_resolution_conflicts_total[1h]))", "legendFormat": "conflicts" } ]
+    },
+    {
+      "id": 15, "type": "timeseries", "title": "Exceptions applied per hour",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 26 },
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(increase(axiom_exception_usage_total[1h]))", "legendFormat": "exception applications" } ]
+    },
+    {
+      "id": 16, "type": "timeseries", "title": "Applied records per evaluation (avg context size)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 26 },
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(rate(axiom_resolution_context_size_records_sum[15m])) / sum(rate(axiom_resolution_context_size_records_count[15m]))", "legendFormat": "avg records" } ]
+    },
+    {
+      "id": 17, "type": "stat", "title": "Semantic overturn ratio (7d, false-positive proxy)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 26 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.3 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(increase(axiom_semantic_overturns_total[7d])) / sum(increase(axiom_semantic_findings_total[7d]))" } ]
+    },
+    {
+      "id": 18, "type": "timeseries", "title": "Semantic findings per hour by severity",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 34 },
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (severity) (increase(axiom_semantic_findings_total[1h]))", "legendFormat": "{{severity}}" } ]
+    },
+    {
+      "id": 19, "type": "timeseries", "title": "Model tokens per hour by provider (cost)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 34 },
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (provider) (increase(axiom_semantic_tokens_total[1h]))", "legendFormat": "{{provider}}" } ]
+    }
+  ]
+}

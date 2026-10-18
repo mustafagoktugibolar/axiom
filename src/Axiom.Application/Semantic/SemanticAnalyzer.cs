@@ -159,8 +159,11 @@ public sealed partial class SemanticAnalyzer(IOptions<SemanticOptions> options, 
             .ThenBy(r => r.EntityId, StringComparer.Ordinal)
             .ThenBy(r => r.Path, StringComparer.Ordinal))
         {
-            // Every finding must cite a changed file of the packet. What else is citable depends on the kind.
-            if (item.Confidence < _options.MinConfidence || !changes.TryGetValue(item.Path, out var change))
+            // Provider output is untrusted even when it parsed: a NaN, infinite or out-of-range confidence would
+            // pass the threshold comparison below and then fail JSON serialization when the evaluation is stored.
+            // Every finding must also cite a changed file of the packet. What else is citable depends on the kind.
+            if (!double.IsFinite(item.Confidence) || item.Confidence is < 0 or > 1
+                || item.Confidence < _options.MinConfidence || !changes.TryGetValue(item.Path, out var change))
             {
                 continue;
             }

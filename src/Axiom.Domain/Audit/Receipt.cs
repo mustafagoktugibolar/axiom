@@ -58,13 +58,54 @@ public static class ReceiptFactory
 
     public static string Chain(string previousChainDigest, string digest) => Sha256(previousChainDigest + "\n" + digest);
 
-    /// <summary>True when the stored digest matches the payload and the chain link is intact.</summary>
+    /// <summary>
+    /// True when the stored digest matches the payload, the chain link is intact, and the denormalized
+    /// columns (ID, evaluation, stage, verdict, repository, commit, snapshot, issue time) agree with the
+    /// signed payload. Without the last check, the verdict a reader sees could be rewritten in the table
+    /// while the payload, digest and chain still verify.
+    /// </summary>
     public static bool Verify(Receipt receipt)
     {
         ArgumentNullException.ThrowIfNull(receipt);
         return string.Equals(Sha256(receipt.Payload), receipt.Digest, StringComparison.Ordinal)
-            && string.Equals(Chain(receipt.PreviousChainDigest, receipt.Digest), receipt.ChainDigest, StringComparison.Ordinal);
+            && string.Equals(Chain(receipt.PreviousChainDigest, receipt.Digest), receipt.ChainDigest, StringComparison.Ordinal)
+            && receipt.Digest.Length >= 24
+            && string.Equals(receipt.Id, "rc_" + receipt.Digest[..24], StringComparison.Ordinal)
+            && ColumnsMatchPayload(receipt);
     }
+
+    /// <summary>True when the evaluation document is exactly the one the receipt was issued for.</summary>
+    public static bool Matches(EvaluationRecord evaluation, Receipt receipt)
+    {
+        ArgumentNullException.ThrowIfNull(evaluation);
+        ArgumentNullException.ThrowIfNull(receipt);
+        return string.Equals(CanonicalPayload(evaluation), receipt.Payload, StringComparison.Ordinal);
+    }
+
+    private static bool ColumnsMatchPayload(Receipt receipt)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(receipt.Payload);
+            var root = document.RootElement;
+            var scm = root.GetProperty("scm");
+            return Same(root, "evaluationId", receipt.EvaluationId)
+                && Same(root, "organizationId", receipt.OrganizationId)
+                && Same(root, "stage", receipt.Stage.ToString())
+                && Same(root, "verdict", VerdictLattice.ToContract(receipt.Verdict))
+                && Same(root, "createdAt", receipt.IssuedAt.ToUniversalTime().ToString("O"))
+                && Same(scm, "repository", receipt.Repository)
+                && Same(scm, "commitSha", receipt.CommitSha)
+                && Same(root.GetProperty("governance"), "snapshotId", receipt.SnapshotId);
+        }
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    private static bool Same(JsonElement element, string name, string? expected) =>
+        string.Equals(element.GetProperty(name).GetString(), expected, StringComparison.Ordinal);
 
     /// <summary>
     /// Canonical JSON: fixed property order, sorted collections, no insignificant whitespace. Free text

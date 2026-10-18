@@ -23,6 +23,7 @@
   <ItemGroup>
     <Content Include="../../axiom-engineering-governance-plane/examples/governance/**/*" LinkBase="SpecExamples" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../governance/**/*" Exclude="../../governance/schemas/**" LinkBase="AxiomGovernance" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../deploy/observability/**/*" LinkBase="Observability" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
