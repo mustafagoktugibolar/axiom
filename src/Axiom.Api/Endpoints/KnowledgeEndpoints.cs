@@ -9,6 +9,12 @@ public sealed record AdrImportBody(string? Repository, string? Branch);
 
 public sealed record CandidateDecisionBody(bool Approve, string? Comment);
 
+public sealed record DocsScanBody(string? Repository, string? Branch);
+
+public sealed record ReviewMiningBody(string? Repository, int? MinOccurrences, int? MinPullRequests, int? MaxPullRequests);
+
+public sealed record PostmortemImportBody(string? Repository, string? Branch, string? Path);
+
 /// <summary>Knowledge onboarding: candidates (never authoritative), ADR import and governance coverage.</summary>
 internal static class KnowledgeEndpoints
 {
@@ -38,6 +44,19 @@ internal static class KnowledgeEndpoints
         routes.MapPost("/v1/admin/candidates/import-adrs", async (AdrImportBody body, AxiomPrincipal principal, AdrImportService service, CancellationToken ct) =>
             await service.ImportRepositoryAsync(principal, body.Repository ?? string.Empty, body.Branch, ct))
             .WithTags("Candidates").WithName("importAdrs");
+
+        // Candidate sources 11.2 to 11.4: they only ever store proposed candidates; same authorization as the ADR import.
+        routes.MapPost("/v1/admin/candidates/scan-docs", async (DocsScanBody body, AxiomPrincipal principal, DocsScanService service, CancellationToken ct) =>
+            await service.ScanRepositoryAsync(principal, body.Repository ?? string.Empty, body.Branch, ct))
+            .WithTags("Candidates").WithName("scanDocsForCandidates");
+
+        routes.MapPost("/v1/admin/candidates/mine-review-comments", async (ReviewMiningBody body, AxiomPrincipal principal, ReviewCommentMiningService service, CancellationToken ct) =>
+            await service.MineAsync(principal, body.Repository ?? string.Empty, body.MinOccurrences, body.MinPullRequests, body.MaxPullRequests, ct))
+            .WithTags("Candidates").WithName("mineReviewComments");
+
+        routes.MapPost("/v1/admin/candidates/import-postmortems", async (PostmortemImportBody body, AxiomPrincipal principal, PostmortemImportService service, CancellationToken ct) =>
+            await service.ImportRepositoryAsync(principal, body.Repository ?? string.Empty, body.Branch, body.Path, ct))
+            .WithTags("Candidates").WithName("importPostmortems");
 
         routes.MapGet("/v1/coverage", async (AxiomPrincipal principal, GovernanceCoverageService service, string? filter, int? skip, int? take, CancellationToken ct) =>
             await service.GetAsync(principal, Parse<CoverageFilter>(filter, "filter") ?? CoverageFilter.All, skip ?? 0, take ?? GovernanceCoverageService.DefaultPageSize, ct))
