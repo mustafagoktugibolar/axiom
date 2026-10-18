@@ -36,7 +36,7 @@ watchEffect(async () => {
     </template>
     <template v-if="detail.record.rationale"><h2>Rationale</h2><pre>{{ detail.record.rationale }}</pre></template>
     <h2>Revision history</h2>
-    <table><thead><tr><th>Rev</th><th>Status</th><th>Commit</th><th>Author</th><th>When</th></tr></thead>
+    <table><caption class="muted">Revision history</caption><thead><tr><th scope="col">Rev</th><th scope="col">Status</th><th scope="col">Commit</th><th scope="col">Author</th><th scope="col">When</th></tr></thead>
       <tbody><tr v-for="h in detail.history" :key="h.revision">
         <td>{{ h.revision }}</td><td>{{ h.status }}</td><td><code>{{ h.commitSha.slice(0, 10) }}</code></td><td>{{ h.author }}</td><td>{{ h.committedAt }}</td>
       </tr></tbody></table>

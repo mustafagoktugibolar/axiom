@@ -83,7 +83,7 @@ async function refocus(id: string) { focus.value = id; await load(); }
         :aria-label="`${n.id}, ${n.title}, ${n.status}, authority ${n.authorityLevel}${n.authoritative ? '' : ', not authoritative'}. Press Enter to select.`"
         :aria-pressed="picked === n.id" @click="pick(n.id)" @keydown.enter.prevent="pick(n.id)" @keydown.space.prevent="pick(n.id)">
         <rect :x="layout.pos.get(n.id)!.x" :y="layout.pos.get(n.id)!.y" :width="W" :height="H" rx="6" fill="#0969da" :opacity="dim(n.id) ? 0.3 : 1"
-          :stroke="n.id === picked || n.focus ? '#1f2328' : n.authoritative ? 'none' : '#fff'" :stroke-width="n.id === picked || n.focus ? 3 : 2" :stroke-dasharray="n.authoritative ? undefined : '5 3'" />
+          :stroke="n.id === picked || n.focus ? 'currentColor' : n.authoritative ? 'none' : '#fff'" style="color:var(--fg)" :stroke-width="n.id === picked || n.focus ? 3 : 2" :stroke-dasharray="n.authoritative ? undefined : '5 3'" />
         <text :x="layout.pos.get(n.id)!.x + 8" :y="layout.pos.get(n.id)!.y + 18" fill="#fff" font-size="12" font-weight="600">{{ n.id.length > 22 ? n.id.slice(0, 21) + '…' : n.id }}</text>
         <text :x="layout.pos.get(n.id)!.x + 8" :y="layout.pos.get(n.id)!.y + 36" fill="#fff" font-size="11">{{ n.status }} · {{ n.authorityLevel }}</text>
       </g>
@@ -105,7 +105,7 @@ async function refocus(id: string) { focus.value = id; await load(); }
     <p v-if="!data.edges.length" class="muted">These records have no relations between them.</p>
     <table v-else>
       <caption class="muted">{{ data.edges.length }} relation(s) between {{ data.nodes.length }} record(s)</caption>
-      <thead><tr><th>From</th><th>Relation</th><th>To</th></tr></thead>
+      <thead><tr><th scope="col">From</th><th scope="col">Relation</th><th scope="col">To</th></tr></thead>
       <tbody>
         <tr v-for="e in data.edges" :key="e.from + e.relation + e.to" :class="{ picked: picked === e.from || picked === e.to }">
           <td><button class="link" @click="emit('open', e.from)">{{ e.from }}</button><div>{{ titleOf(e.from) }}</div></td>
@@ -116,7 +116,8 @@ async function refocus(id: string) { focus.value = id; await load(); }
     </table>
     <h2>Records</h2>
     <table>
-      <thead><tr><th>Record</th><th>Kind</th><th>Status</th><th>Authority</th><th></th></tr></thead>
+      <caption class="muted">{{ data.nodes.length }} record(s) in the graph</caption>
+      <thead><tr><th scope="col">Record</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col">Authority</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
       <tbody>
         <tr v-for="n in data.nodes" :key="n.id">
           <td><button class="link" @click="emit('open', n.id)">{{ n.id }}</button><div>{{ n.title }}</div></td>

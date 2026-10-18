@@ -51,7 +51,8 @@ const when = (iso: string) => new Date(iso).toLocaleString();
     <p v-if="error" class="err" role="alert">{{ error }}</p>
     <p v-else-if="!items.length" class="muted">No evaluations yet. Run a preflight or a PR check from Get started.</p>
     <table v-else>
-      <thead><tr><th>When</th><th>Check</th><th>Repository</th><th>Verdict</th><th>Findings</th><th>By</th></tr></thead>
+      <caption class="muted">Evaluations, newest first</caption>
+      <thead><tr><th scope="col">When</th><th scope="col">Check</th><th scope="col">Repository</th><th scope="col">Verdict</th><th scope="col">Findings</th><th scope="col">By</th></tr></thead>
       <tbody>
         <tr v-for="e in items" :key="e.id">
           <td>{{ when(e.createdAt) }}</td>

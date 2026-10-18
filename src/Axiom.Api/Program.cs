@@ -87,6 +87,7 @@ if (args.Contains("--migrate", StringComparer.Ordinal))
 }
 
 app.UseExceptionHandler();
+app.UseAxiomSecurityHeaders(app.Configuration["Axiom:Auth:Authority"]);
 
 // The portal is a static SPA built from src/Axiom.Portal. It is served same-origin only when a build
 // directory is configured, so the API stays usable headless and no CORS surface is opened.

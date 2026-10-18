@@ -22,7 +22,8 @@ onMounted(load);
   <p v-if="error" class="err" role="alert">{{ error }}</p>
   <p v-else-if="loaded && !items.length" class="ok">Nothing is waiting for review.</p>
   <table v-if="items.length">
-    <thead><tr><th>Check</th><th>Repository</th><th>Verdict</th><th>Findings</th><th>Reviewers</th></tr></thead>
+    <caption class="muted">Evaluations waiting for review</caption>
+    <thead><tr><th scope="col">Check</th><th scope="col">Repository</th><th scope="col">Verdict</th><th scope="col">Findings</th><th scope="col">Reviewers</th></tr></thead>
     <tbody>
       <tr v-for="i in items" :key="i.evaluation.id">
         <td><button class="link" @click="$emit('openEvaluation', i.evaluation.id)">{{ i.evaluation.stage }}</button></td>
