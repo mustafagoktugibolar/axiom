@@ -15,6 +15,7 @@ public static class ScmModule
 
         services.AddOptions<ScmOptions>().Bind(configuration.GetSection(ScmOptions.SectionName));
         services.TryAddScoped<IScmDiffSource, GitScmDiffSource>();
+        services.TryAddScoped<IScmTreeSource, GitScmDiffSource>();
 
         // Redirects are not followed: a token must never be replayed to another host.
         services.AddHttpClient(ScmStatusPublisher.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(30))

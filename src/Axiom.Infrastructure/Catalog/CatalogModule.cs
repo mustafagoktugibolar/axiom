@@ -26,6 +26,7 @@ public static class CatalogModule
         services.TryAddScoped<IEventOutbox, EfEventOutbox>();
         services.AddOptions<CatalogOptions>().Bind(configuration.GetSection(CatalogOptions.SectionName));
         services.AddScoped<ISystemGraph, PostgresSystemGraph>();
+        services.AddScoped<IRepositoryDirectory, PostgresSystemGraph>();
         services.AddScoped<ICatalogWriter, CatalogWriter>();
         services.AddSingleton<ICatalogManifestParser, CatalogManifestParser>();
         services.AddScoped<ImpactAnalyzer>();

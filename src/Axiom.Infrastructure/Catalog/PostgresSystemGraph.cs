@@ -25,8 +25,22 @@ public sealed class CatalogOptions
 /// Read side of the System Graph on PostgreSQL (ADR-0004). Traversals are single, relation-specific
 /// recursive queries bounded by depth and by a row cap; every query is filtered by organization.
 /// </summary>
-public sealed class PostgresSystemGraph(AxiomDbContext db, TimeProvider timeProvider, IOptions<CatalogOptions> options) : ISystemGraph
+public sealed class PostgresSystemGraph(AxiomDbContext db, TimeProvider timeProvider, IOptions<CatalogOptions> options) : ISystemGraph, IRepositoryDirectory
 {
+    public async Task<(ImmutableArray<EntityRef> Items, int Total)> ListRepositoriesAsync(string organizationId, int skip, int take, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(organizationId);
+        var kind = EntityRef.PrefixOf(EntityKind.Repository);
+        var repositories = Entities(organizationId).Where(e => e.Kind == kind);
+        var total = await repositories.CountAsync(cancellationToken).ConfigureAwait(false);
+        var refs = await repositories
+            .OrderBy(e => EF.Functions.Collate(e.EntityRef, "C"))
+            .Skip(Math.Max(0, skip)).Take(Math.Clamp(take, 1, 1000))
+            .Select(e => e.EntityRef)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        return (Sorted(refs), total);
+    }
+
     private const string Implements = "IMPLEMENTS";
     private const string Owns = "OWNS";
     private const string Contains = "CONTAINS";

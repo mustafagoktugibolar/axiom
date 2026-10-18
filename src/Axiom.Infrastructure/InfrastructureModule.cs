@@ -1,3 +1,4 @@
+using Axiom.Application.Candidates;
 using Axiom.Application.Common;
 using Axiom.Application.Evaluation;
 using Axiom.Application.Exceptions;
@@ -37,6 +38,7 @@ public static class InfrastructureModule
         services.AddScoped<IEvaluationStore, EfEvaluationStore>();
         services.AddScoped<IReviewStore, EfReviewStore>();
         services.AddScoped<IExceptionRequestStore, EfExceptionRequestStore>();
+        services.AddScoped<ICandidateStore, EfCandidateStore>();
 
         services.AddHealthChecks().AddCheck<SchemaHealthCheck>("postgresql", tags: ["ready"]);
 

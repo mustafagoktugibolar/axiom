@@ -1,3 +1,5 @@
+using Axiom.Application.Candidates;
+using Axiom.Application.Coverage;
 using Axiom.Application.Evaluation;
 using Axiom.Application.Exceptions;
 using Axiom.Application.Query;
@@ -23,6 +25,9 @@ public static class ApplicationModule
         services.AddScoped<DiffEvaluationService>();
         services.AddScoped<PullRequestStatusReporter>();
         services.AddScoped<ExceptionRequestService>();
+        services.AddScoped<CandidateService>();
+        services.AddScoped<AdrImportService>();
+        services.AddScoped<GovernanceCoverageService>();
         services.AddScoped<GovernanceReadService>();
         services.AddScoped<ImpactService>();
         services.AddScoped<ReceiptService>();
