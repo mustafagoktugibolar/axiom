@@ -1,0 +1,119 @@
+# Prometheus Operator PrometheusRule for Axiom (observability-and-slo.md).
+#
+# Apply with:  kubectl apply -f deploy/observability/axiom-alerts.yaml
+# Not part of the kustomize base on purpose: it needs the Prometheus Operator CRDs.
+#
+# Metric names: Axiom exports its instruments (src/Axiom.Application/Common/Telemetry.cs) over OTLP.
+# Names below assume the standard OTLP -> Prometheus translation (Prometheus OTLP receiver or the
+# collector's prometheus exporter): '.' becomes '_', counters gain '_total', the unit is appended
+# ('ms' -> '_milliseconds', 's' -> '_seconds'), histograms expose _bucket/_sum/_count. The label
+# values of `stage` are the EvaluationStage names (Preflight, Design, EditCheck, Diff, PullRequest, Drift).
+# deploy/observability tests (MetricContractTests) fail if a metric used here is not defined in Telemetry.cs.
+#
+# SLO targets that cannot be alerted on yet because no instrument exists (see docs/operations/threat-model-review.md):
+#   - read/preflight availability 99.9% and p95 governance search < 500 ms (no HTTP server metrics are exported)
+#   - "hard-rule evaluation unavailable" (failures surface as HTTP 503, which is not metered)
+#   - stale governance snapshot, policy runner failure spike (no policy runner process yet)
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: axiom-slo
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: observability
+spec:
+  groups:
+    - name: axiom.slo.latency
+      rules:
+        - alert: AxiomPreflightLatencySloBreach
+          # SLO: p95 deterministic preflight < 1.5 s.
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(axiom_evaluation_duration_milliseconds_bucket{stage="Preflight"}[10m]))) > 1500
+          for: 15m
+          labels: { severity: warning, slo: preflight-latency }
+          annotations:
+            summary: p95 deterministic preflight above 1.5 s
+            description: "p95 preflight latency is {{ $value | humanize }} ms (target < 1500 ms)."
+        - alert: AxiomPullRequestLatencySloBreach
+          # SLO: p95 standard PR deterministic evaluation < 30 s.
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(axiom_evaluation_duration_milliseconds_bucket{stage="PullRequest"}[30m]))) > 30000
+          for: 15m
+          labels: { severity: warning, slo: pr-latency }
+          annotations:
+            summary: p95 pull request evaluation above 30 s
+            description: "p95 PR evaluation latency is {{ $value | humanize }} ms (target < 30000 ms). Semantic analysis adds up to its configured timeout."
+        - alert: AxiomSemanticPreflightLatencySloBreach
+          # SLO: p95 semantic evaluation < 5 s. Semantic analysis runs on the diff stage today.
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(axiom_evaluation_duration_milliseconds_bucket{stage="Diff"}[30m]))) > 5000
+          for: 15m
+          labels: { severity: info, slo: semantic-latency }
+          annotations:
+            summary: p95 diff evaluation above 5 s
+            description: "p95 diff evaluation latency is {{ $value | humanize }} ms (target < 5000 ms when semantic analysis is on)."
+    - name: axiom.integrity
+      rules:
+        - alert: AxiomReceiptGenerationFailing
+          # A failed receipt append means the caller got an error and no verdict: governance is unavailable.
+          expr: sum(increase(axiom_receipt_failures_total[10m])) > 0
+          for: 5m
+          labels: { severity: critical, slo: receipt-integrity }
+          annotations:
+            summary: Receipts cannot be written
+            description: "{{ $value }} receipt failures in 10 minutes. Evaluations return GOVERNANCE_UNAVAILABLE; check the database."
+        - alert: AxiomScmStatusPublishingFailing
+          expr: sum(increase(axiom_scm_status_failures_total[15m])) > 5
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: Pull request status checks are not reaching the source-control system
+            description: "{{ $value }} status publish failures in 15 minutes. Branch protection will wait on a missing check."
+    - name: axiom.projection
+      rules:
+        - alert: AxiomGovernanceProjectionLag
+          # SLO: governance projection freshness after merge < 60 s. The instrument exists; it is only
+          # recorded once the synchronizer emits it, so this alert stays silent until then.
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(axiom_ingestion_lag_seconds_bucket[15m]))) > 60
+          for: 10m
+          labels: { severity: warning, slo: projection-freshness }
+          annotations:
+            summary: Governance projection is more than 60 s behind Git
+            description: "p95 ingestion lag is {{ $value | humanize }} s (target < 60 s)."
+    - name: axiom.governance
+      rules:
+        - alert: AxiomUnresolvedAuthorityConflicts
+          expr: sum(increase(axiom_resolution_conflicts_total[1h])) > 0
+          for: 1h
+          labels: { severity: info }
+          annotations:
+            summary: Evaluations keep hitting unresolved authority conflicts
+            description: "{{ $value }} unresolved conflicts in the last hour; decision owners must resolve them."
+        - alert: AxiomBlockRateHigh
+          expr: |
+            sum(rate(axiom_evaluations_total{verdict="BLOCK"}[1h])) / sum(rate(axiom_evaluations_total[1h])) > 0.5
+            and sum(rate(axiom_evaluations_total[1h])) > 0.01
+          for: 30m
+          labels: { severity: info }
+          annotations:
+            summary: More than half of the evaluations are blocked
+            description: "BLOCK share is {{ $value | humanizePercentage }}. A rule or a snapshot may be wrong."
+        - alert: AxiomExceptionsInHeavyUse
+          # Exceptions waive controls; heavy use needs a human look (T4).
+          expr: sum(increase(axiom_exception_usage_total[1d])) > 100
+          labels: { severity: info }
+          annotations:
+            summary: Exceptions are being applied at a high rate
+            description: "{{ $value }} exception applications in 24 h."
+        - alert: AxiomSemanticFalsePositiveRateHigh
+          # Reviewer overturns divided by semantic findings; calibration signal (R9).
+          expr: |
+            sum(increase(axiom_semantic_overturns_total[7d])) / sum(increase(axiom_semantic_findings_total[7d])) > 0.3
+            and sum(increase(axiom_semantic_findings_total[7d])) > 20
+          for: 1h
+          labels: { severity: info }
+          annotations:
+            summary: Reviewers overturn more than 30% of semantic findings
+            description: "Overturn ratio {{ $value | humanizePercentage }} over 7 days; raise the confidence thresholds."

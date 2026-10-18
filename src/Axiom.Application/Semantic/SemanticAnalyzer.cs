@@ -104,7 +104,10 @@ public sealed partial class SemanticAnalyzer(IOptions<SemanticOptions> options, 
 
         foreach (var item in raw.OrderByDescending(r => r.Confidence).ThenBy(r => r.RecordId, StringComparer.Ordinal).ThenBy(r => r.Path, StringComparer.Ordinal))
         {
-            if (item.Confidence < _options.MinConfidence
+            // Provider output is untrusted even when it parsed: a NaN, infinite or out-of-range confidence would
+            // pass the threshold comparison below and then fail JSON serialization when the evaluation is stored.
+            if (!double.IsFinite(item.Confidence) || item.Confidence is < 0 or > 1
+                || item.Confidence < _options.MinConfidence
                 || !packet.Records.Any(r => r.Id == item.RecordId) || !records.TryGetValue(item.RecordId, out var applied)
                 || !changes.TryGetValue(item.Path, out var change))
             {
