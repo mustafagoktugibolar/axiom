@@ -111,6 +111,7 @@ app.MapGovernanceEndpoints();
 app.MapGraphEndpoints();
 app.MapSourceEndpoints();
 app.MapExceptionEndpoints();
+app.MapKnowledgeEndpoints();
 app.MapMcp("/mcp");
 app.MapAuthMetadata();
 app.MapPortalAuth(app.Environment);

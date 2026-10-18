@@ -20,10 +20,50 @@ namespace Axiom.Infrastructure.Scm;
 /// entity's <c>cloneUrls</c>). The mirror is only fetched into, never pushed to, and only commits
 /// addressed by SHA are read, so the result does not depend on any working tree.
 /// </summary>
-public sealed class GitScmDiffSource(ISystemGraph graph, IOptionsMonitor<ScmOptions> options) : IScmDiffSource
+public sealed class GitScmDiffSource(ISystemGraph graph, IOptionsMonitor<ScmOptions> options) : IScmDiffSource, IScmTreeSource
 {
     private const string RemoteName = "origin";
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> Gates = new(StringComparer.Ordinal);
+
+    public async Task<ScmTree> GetTreeAsync(ScmTreeRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // The same clone-URL resolution, host allow-list, credentials and mirror as diffs: no new network path.
+        var diffRequest = new ScmDiffRequest(request.OrganizationId, request.Repository, string.Empty, string.Empty);
+        var settings = options.CurrentValue;
+        var url = await ResolveCloneUrlAsync(diffRequest, settings, cancellationToken);
+        var credential = CredentialFor(url, settings);
+        var mirror = MirrorPath(settings, request.OrganizationId, url);
+
+        var gate = Gates.GetOrAdd(mirror, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            return await Task.Run(() => ReadTree(request, diffRequest, url, credential, mirror), cancellationToken);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    private static ScmTree ReadTree(ScmTreeRequest request, ScmDiffRequest diffRequest, string url, UsernamePasswordCredentials? credential, string mirror)
+    {
+        Fetch(mirror, url, credential, diffRequest);
+        using var repository = new Repository(mirror);
+        var names = string.IsNullOrWhiteSpace(request.Ref) ? new[] { "main", "master" } : new[] { request.Ref.Trim() };
+        var commit = names.Select(n => repository.Branches[$"{RemoteName}/{n}"]?.Tip).FirstOrDefault(c => c is not null)
+            ?? (string.IsNullOrWhiteSpace(request.Ref)
+                ? repository.Branches.Where(b => b.IsRemote).OrderBy(b => b.FriendlyName, StringComparer.Ordinal).Select(b => b.Tip).FirstOrDefault(c => c is not null)
+                : null)
+            ?? throw Unavailable(diffRequest, $"branch '{request.Ref ?? "(default)"}' does not exist in the repository");
+
+        var paths = new List<string>();
+        CollectPaths(commit.Tree, paths);
+        paths.Sort(StringComparer.Ordinal);
+        return new ScmTree(commit.Sha, new GitRepositoryView(mirror, commit.Sha, paths));
+    }
 
     public async Task<ScmDiff> GetDiffAsync(ScmDiffRequest request, CancellationToken cancellationToken)
     {

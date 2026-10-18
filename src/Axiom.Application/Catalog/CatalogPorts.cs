@@ -66,6 +66,13 @@ public interface ISystemGraph
     Task<string> GetCatalogVersionAsync(string organizationId, CancellationToken cancellationToken);
 }
 
+/// <summary>Enumerates the repositories the System Graph knows, for reports that cover all of them.</summary>
+public interface IRepositoryDirectory
+{
+    /// <summary>One page of repository references in ordinal order, and the total number of repositories.</summary>
+    Task<(ImmutableArray<EntityRef> Items, int Total)> ListRepositoriesAsync(string organizationId, int skip, int take, CancellationToken cancellationToken);
+}
+
 /// <summary>A set of entities and edges observed from one source at one time.</summary>
 public sealed record CatalogImport(
     ProvenanceSource Source,

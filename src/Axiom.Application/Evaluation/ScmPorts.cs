@@ -20,3 +20,18 @@ public interface IScmDiffSource
 {
     Task<ScmDiff> GetDiffAsync(ScmDiffRequest request, CancellationToken cancellationToken);
 }
+
+/// <summary>A repository to read at the head of a branch. A null <see cref="Ref"/> means the default branch.</summary>
+public sealed record ScmTreeRequest(string OrganizationId, string Repository, string? Ref);
+
+/// <summary>The repository tree at one immutable commit.</summary>
+public sealed record ScmTree(string CommitSha, IRepositoryView Tree);
+
+/// <summary>
+/// Reads the files of a registered repository at a branch head (knowledge onboarding). It uses the same
+/// adapter, allowed hosts and credentials as <see cref="IScmDiffSource"/>; it only reads.
+/// </summary>
+public interface IScmTreeSource
+{
+    Task<ScmTree> GetTreeAsync(ScmTreeRequest request, CancellationToken cancellationToken);
+}
