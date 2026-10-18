@@ -163,9 +163,15 @@ Input:
 - evidence references;
 - owner suggestion.
 
+Implementation notes:
+- inputs: `title`, `statement`, `evidenceLocator` (required), `rationale`, `suggestedOwner`, `kind` (decision, standard, principle or goal), `scope`;
+- the candidate is stored as `Proposed` with extraction method `agent-proposal`, validated like any other candidate, and de-duplicated by evidence and statement;
+- limits: statement 2000 characters, rationale 8000, at most 20 values per scope dimension; same authentication and rate limits as every tool; requires the ProposeDecision right;
+- a human owner (approver of the suggested owner team, DecisionOwner or PlatformAdmin, never the proposer) approves or rejects it with a comment; approval changes no evaluation, only the record merged in the governance repository governs.
+
 Output:
-- candidate ID;
-- Git PR/workflow reference.
+- candidate ID, state and `authoritative: false`;
+- the draft record (status `proposed`) and the next step for a human.
 
 ## Tool: `governance.request_exception`
 

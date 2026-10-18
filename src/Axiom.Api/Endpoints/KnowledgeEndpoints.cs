@@ -7,6 +7,8 @@ namespace Axiom.Api.Endpoints;
 
 public sealed record AdrImportBody(string? Repository, string? Branch);
 
+public sealed record CandidateDecisionBody(bool Approve, string? Comment);
+
 /// <summary>Knowledge onboarding: candidates (never authoritative), ADR import and governance coverage.</summary>
 internal static class KnowledgeEndpoints
 {
@@ -23,6 +25,10 @@ internal static class KnowledgeEndpoints
 
         candidates.MapGet("/{id}", async (string id, AxiomPrincipal principal, CandidateService service, CancellationToken ct) =>
             await service.GetAsync(principal, id, ct)).WithName("getCandidate");
+
+        // The review queue's decision. Approving never makes the candidate govern; only the merged record does.
+        candidates.MapPost("/{id}/decision", async (string id, CandidateDecisionBody body, AxiomPrincipal principal, CandidateService service, CancellationToken ct) =>
+            await service.DecideAsync(principal, id, body.Approve, body.Comment, ct)).WithName("decideCandidate");
 
         // Reads a registered repository through the SCM adapter (same host rules as diffs) and stores its ADRs as candidates.
         routes.MapPost("/v1/admin/candidates/import-adrs", async (AdrImportBody body, AxiomPrincipal principal, AdrImportService service, CancellationToken ct) =>

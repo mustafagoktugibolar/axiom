@@ -12,7 +12,7 @@ public sealed class McpServerTests(PostgresFixture postgres)
     private static readonly string[] ExpectedTools =
     [
         "governance.explain_finding", "governance.get_context", "governance.get_decision", "governance.get_exception_request", "governance.get_receipt", "governance.impact_analysis",
-        "governance.preflight_change", "governance.query_decisions", "governance.request_exception", "governance.validate_design", "governance.validate_diff",
+        "governance.preflight_change", "governance.propose_decision", "governance.query_decisions", "governance.request_exception", "governance.validate_design", "governance.validate_diff",
     ];
 
     private async Task<(ApiHost Host, string Base, string Head)> ArrangeAsync(string violatingPath = "src/Generated/Client.cs")

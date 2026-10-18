@@ -17,6 +17,16 @@ public sealed record CandidateInput(
     string? Rationale,
     IReadOnlyDictionary<string, string[]>? ScopeHints);
 
+/// <summary>What an agent supplies to <c>governance.propose_decision</c>. The excerpt hash, method and confidence are set by Axiom.</summary>
+public sealed record AgentProposalInput(
+    string? Title,
+    string? Statement,
+    string? Rationale,
+    string? EvidenceLocator,
+    string? SuggestedOwner,
+    RecordKind? Kind,
+    IReadOnlyDictionary<string, string[]>? ScopeHints);
+
 public sealed record CandidateIngestResult(int Created, int Existing, ImmutableArray<string> CreatedIds, ImmutableArray<string> ExistingIds);
 
 public sealed record CandidateListQuery(CandidateState? State, RecordKind? Kind, string? Owner, int Skip, int Take);
