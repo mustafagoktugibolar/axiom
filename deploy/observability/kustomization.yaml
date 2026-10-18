@@ -1,0 +1,15 @@
+# Local, single-pod observability stack: Grafana + Loki (logs) + Tempo (traces) + Prometheus (metrics) + an OTLP
+# receiver, all in grafana/otel-lgtm. Axiom sends logs, traces and metrics to it over OTLP. Data lives in the pod
+# (emptyDir): it is gone when the pod restarts. Production uses the collector in prod/ instead.
+#   kubectl apply -k deploy/observability     (deploy/local/up.ps1 does this)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: observability
+resources:
+  - lgtm.yaml
+configMapGenerator:
+  - name: axiom-dashboards
+    files:
+      - axiom-slo-dashboard.json
+    options:
+      disableNameSuffixHash: true

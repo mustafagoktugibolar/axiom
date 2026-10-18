@@ -15,6 +15,10 @@ data:
   {{- with .Values.publicBaseUrl }}
   Axiom__PublicBaseUrl: {{ . | quote }}
   {{- end }}
+  {{- with .Values.observability.otlp.endpoint }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ . | quote }}
+  OTEL_EXPORTER_OTLP_PROTOCOL: {{ $.Values.observability.otlp.protocol | quote }}
+  {{- end }}
   {{- range $k, $v := .Values.config }}
   {{ $k }}: {{ $v | quote }}
   {{- end }}

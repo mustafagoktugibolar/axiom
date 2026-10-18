@@ -14,6 +14,7 @@ using Axiom.Infrastructure.Scm;
 using Axiom.Infrastructure.Semantic;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,7 +36,9 @@ builder.Services.AddScmInfrastructure(builder.Configuration);
 builder.Services.AddSemanticInfrastructure(builder.Configuration);
 builder.Services.AddCustomPolicyRunner(builder.Configuration);
 builder.Services.AddPolicyEngine();
-builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation());
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation())
+    .WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation());
 builder.Services.AddAxiomAuthentication(builder.Configuration, builder.Environment);
 
 builder.Services.AddExceptionHandler<AxiomExceptionHandler>();

@@ -62,6 +62,13 @@ governance:
 #                                                                      Axiom__Semantic__Anthropic__ApiKey: <from the Secret>
 config: {}
 
+# Logs, traces and metrics leave the pods over OTLP to a central collector (see deploy/observability/prod).
+# Empty: nothing is exported and logs stay on stdout only.
+observability:
+  otlp:
+    endpoint: ""          # e.g. http://otel-collector.observability.svc:4317
+    protocol: grpc        # grpc, or http/protobuf together with the collector's 4318 port
+
 api:
   replicas: 2
   resources:

@@ -16,6 +16,19 @@ in-cluster Postgres (pgvector image), the built-in dev login, and the demo gover
 (`deploy/local/demo-repo`, baked into the workers image) registered as organization `dev`. Re-run `up.ps1`
 after code changes; `-SkipBuild` redeploys without rebuilding.
 
+## Logs, traces and metrics
+
+Axiom (api and workers) writes logs to stdout and also exports logs, traces and metrics over OTLP to the endpoint in
+`OTEL_EXPORTER_OTLP_ENDPOINT`. Log records carry the trace and span ID, so a log line in Grafana links to its trace.
+
+- **Local:** `up.ps1` deploys `deploy/observability` (Grafana, Loki, Tempo, Prometheus in one pod, namespace
+  `observability`) and port-forwards Grafana to http://localhost:3000 (admin / admin). The Axiom SLO dashboard is
+  provisioned. Data is lost when that pod restarts. `-NoObservability` skips it.
+- **Production:** `deploy/observability/prod/otel-collector.yaml` is a central collector that forwards to Loki, Tempo
+  and Prometheus (edit the three backend endpoints). Point Axiom at it with Helm value
+  `observability.otlp.endpoint` (the prod kustomize overlay sets it already). Alert rules: `axiom-alerts.yaml`
+  (Prometheus Operator); dashboard: `axiom-slo-dashboard.json`.
+
 ## Helm
 
 Local evaluation (embedded Postgres, built-in dev login; never on a shared cluster):

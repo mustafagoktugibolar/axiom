@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -55,7 +56,11 @@ public static class InfrastructureModule
                 .AddMeter(AxiomTelemetry.Name)
                 .AddRuntimeInstrumentation()
                 .AddHttpClientInstrumentation()
-                .AddOtlpExporter());
+                .AddOtlpExporter())
+            // Logs go to the same collector as traces (with trace and span IDs), next to the console output.
+            .WithLogging(
+                logging => logging.AddOtlpExporter(),
+                options => options.IncludeFormattedMessage = true);
 
         return services;
     }

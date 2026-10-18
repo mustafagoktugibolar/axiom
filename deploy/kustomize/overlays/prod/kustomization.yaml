@@ -30,6 +30,10 @@ patches:
       - op: add
         path: /data/Axiom__PublicBaseUrl
         value: https://axiom.example.com
+      # Central collector, see deploy/observability/prod/otel-collector.yaml.
+      - op: add
+        path: /data/OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector.observability.svc:4317
 images:
   - name: axiom-api
     newName: registry.example.com/axiom-api

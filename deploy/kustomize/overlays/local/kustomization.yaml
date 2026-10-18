@@ -29,6 +29,10 @@ patches:
       - op: add
         path: /data/Axiom__Semantic__Provider
         value: Heuristic
+      # Logs, traces and metrics go to the local Grafana stack in the observability namespace (deploy/observability).
+      - op: add
+        path: /data/OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://lgtm.observability.svc:4317
       - op: add
         path: /data/Axiom__Demo__RepositoryPath
         value: /opt/axiom-demo-gateway

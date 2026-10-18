@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: axiom-dashboard-provider
+data:
+  axiom.yaml: |
+    apiVersion: 1
+    providers:
+      - name: axiom
+        folder: Axiom
+        type: file
+        allowUiUpdates: true
+        options:
+          path: /axiom-dashboards
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lgtm
+  labels: { app.kubernetes.io/name: lgtm }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: { app.kubernetes.io/name: lgtm }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: lgtm }
+    spec:
+      # The exported dashboard names its data source with an import-time placeholder; file provisioning does not
+      # fill it in, so point it at the Prometheus data source otel-lgtm provisions (uid "prometheus").
+      initContainers:
+        - name: dashboards
+          image: busybox:1.37
+          command: ["sh", "-c", "sed 's/${DS_PROMETHEUS}/prometheus/g' /src/axiom-slo-dashboard.json > /out/axiom-slo-dashboard.json"]
+          volumeMounts:
+            - { name: dashboards-src, mountPath: /src }
+            - { name: dashboards, mountPath: /out }
+      containers:
+        - name: lgtm
+          image: grafana/otel-lgtm:0.11.0
+          ports:
+            - { name: grafana, containerPort: 3000 }
+            - { name: otlp-grpc, containerPort: 4317 }
+            - { name: otlp-http, containerPort: 4318 }
+          readinessProbe: { httpGet: { path: /api/health, port: grafana }, periodSeconds: 5, failureThreshold: 30 }
+          resources:
+            requests: { cpu: 200m, memory: 768Mi }
+            limits: { memory: 2Gi }
+          volumeMounts:
+            - { name: dashboards, mountPath: /axiom-dashboards }
+            - { name: provider, mountPath: /otel-lgtm/grafana/conf/provisioning/dashboards/axiom.yaml, subPath: axiom.yaml }
+      volumes:
+        - { name: dashboards-src, configMap: { name: axiom-dashboards } }
+        - { name: dashboards, emptyDir: {} }
+        - { name: provider, configMap: { name: axiom-dashboard-provider } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lgtm
+spec:
+  selector: { app.kubernetes.io/name: lgtm }
+  ports:
+    - { name: grafana, port: 3000, targetPort: grafana }
+    - { name: otlp-grpc, port: 4317, targetPort: otlp-grpc }
+    - { name: otlp-http, port: 4318, targetPort: otlp-http }
