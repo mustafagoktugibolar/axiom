@@ -5,6 +5,7 @@ using Axiom.Infrastructure;
 using Axiom.Infrastructure.Catalog;
 using Axiom.Infrastructure.Events;
 using Axiom.Infrastructure.Governance;
+using Axiom.Infrastructure.Policy;
 using Axiom.Infrastructure.Scm;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -23,6 +24,7 @@ public static class WorkerComposition
         services.AddGovernanceInfrastructure(configuration);
         services.AddCatalogInfrastructure(configuration);
         services.AddScmInfrastructure(configuration);
+        services.AddCustomPolicyRunner(configuration);
         services.AddPolicyEngine();
 
         services.AddOptions<GovernanceSyncOptions>().Bind(configuration.GetSection(GovernanceSyncOptions.SectionName));
