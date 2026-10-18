@@ -1,3 +1,4 @@
+using Axiom.Application.Candidates;
 using Axiom.Application.Evaluation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,15 @@ public static class ScmModule
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false })
             .AddStandardResilienceHandler();
         services.TryAddScoped<IScmStatusPublisher, ScmStatusPublisher>();
+
+        services.AddHttpClient(ScmReviewCommentSource.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+                client.MaxResponseContentBufferSize = 8 * 1024 * 1024;
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false })
+            .AddStandardResilienceHandler();
+        services.TryAddScoped<IReviewCommentSource, ScmReviewCommentSource>();
         return services;
     }
 }

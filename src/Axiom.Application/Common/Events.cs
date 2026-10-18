@@ -13,6 +13,8 @@ public static class EventTypes
     public const string ExceptionRequested = "exception.requested";
     public const string ExceptionDecided = "exception.decided";
     public const string CandidateDecisionCreated = "candidate.decision.created";
+    public const string CandidateDecided = "candidate.decided";
+    public const string CandidateMerged = "candidate.merged";
 }
 
 /// <summary>

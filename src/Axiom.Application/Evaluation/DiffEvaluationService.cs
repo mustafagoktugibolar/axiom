@@ -49,7 +49,8 @@ public sealed class DiffEvaluationService(
     IPolicyRuleCatalog catalog,
     IEvaluationStore evaluations,
     IReviewStore reviews,
-    SemanticAnalyzer? semantic = null)
+    SemanticAnalyzer? semantic = null,
+    Axiom.Application.Candidates.SemanticCandidateExtractor? extractor = null)
 {
     public const string RevalidateDesign = "Validate a design that covers the full scope of this change with governance.validate_design, then validate the diff again with that design evaluation.";
     public const string RequestDesign = "Produce a design for this significant change and validate it with governance.validate_design, then validate the diff again with that design evaluation.";
@@ -127,6 +128,12 @@ public sealed class DiffEvaluationService(
         }
 
         var stored = await pipeline.CompleteAsync(session, cancellationToken);
+        if (session.Existing is null && extractor is not null)
+        {
+            // Task 7.8: after the evaluation is stored; it can never change the verdict or the response.
+            await extractor.ExtractAsync(principal, stored.Evaluation, repository, session.Context.Topology, diff.Files, cancellationToken);
+        }
+
         activity?.SetTag("axiom.evaluation.id", stored.Evaluation.Id);
         activity?.SetTag("axiom.verdict", VerdictLattice.ToContract(stored.Evaluation.Verdict));
         return stored;

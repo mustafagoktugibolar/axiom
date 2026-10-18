@@ -26,6 +26,7 @@ builder.WebHost.ConfigureKestrel(kestrel =>
 });
 
 builder.Services.AddAxiomApplication();
+builder.Services.AddOptions<Axiom.Application.Candidates.CandidateClusteringOptions>().Bind(builder.Configuration.GetSection(Axiom.Application.Candidates.CandidateClusteringOptions.SectionName));
 builder.Services.AddOptions<Axiom.Application.Governance.GovernanceHealthOptions>().Bind(builder.Configuration.GetSection(Axiom.Application.Governance.GovernanceHealthOptions.SectionName));
 builder.Services.AddAxiomInfrastructure(builder.Configuration, "axiom-api");
 builder.Services.AddGovernanceInfrastructure(builder.Configuration);

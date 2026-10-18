@@ -167,3 +167,50 @@ export async function setSource(b: { repositoryUrl: string; branch: string; root
   }
   return (await res.json()) as SourceStatus;
 }
+
+// ---- governance health, coverage, semantic quality ----
+export interface HealthItem { recordId: string; kind: string; title: string; owners: string[]; dueAt?: string | null; referencedBy: string[] }
+export interface GovernanceHealth {
+  snapshotId: string | null; evaluatedAt: string; expiryWindowDays: number;
+  counts: { staleRecords: number; recordsWithoutOwners: number; deprecatedStillReferenced: number; expiringExceptions: number };
+  staleRecords: HealthItem[]; recordsWithoutOwners: HealthItem[]; deprecatedStillReferenced: HealthItem[]; expiringExceptions: HealthItem[];
+}
+// skip/take apply to every list of the response alike; callers read only the list they page.
+export const getGovernanceHealth = (skip: number, take: number) => get<GovernanceHealth>('/v1/health/governance', { skip, take });
+
+export type CoverageFilter = 'all' | 'gaps' | 'uncovered' | 'allstale' | 'covered';
+export interface RepositoryCoverage {
+  repository: string; status: 'Uncovered' | 'AllStale' | 'Covered'; applicableRecords: number; boundRules: number;
+  staleRecords: number; gaps: number; recordIds: string[];
+}
+export interface CoverageReport {
+  snapshotId: string; catalogVersion: string; totalRepositories: number; skip: number; take: number; hasMore: boolean;
+  summary: { examined: number; uncovered: number; allStale: number; covered: number; applicableRecords: number; boundRules: number };
+  items: RepositoryCoverage[];
+}
+export const getCoverage = (filter: CoverageFilter, skip: number, take: number) => get<CoverageReport>('/v1/coverage', { filter, skip, take });
+
+export interface ConfidenceBand { lower: number; upper: number; raised: number; overturned: number; overturnRate: number }
+export interface SemanticMetrics {
+  organizationId: string; from: string; to: string; raised: number; overturned: number; overturnRate: number;
+  groups: { code: string; provider: string; model: string; raised: number; overturned: number; overturnRate: number; bands: ConfidenceBand[] }[];
+  bands: ConfidenceBand[];
+  suggestion: {
+    hasSuggestion: boolean; minConfidence: number | null; reviewConfidence: number | null;
+    currentMinConfidence: number; currentReviewConfidence: number; note: string;
+  };
+  truncated: boolean;
+}
+export const getSemanticMetrics = () => get<SemanticMetrics>('/v1/semantic/metrics');
+
+// ---- candidates (never authoritative; only the merged record governs) ----
+export interface Candidate {
+  id: string; state: 'Proposed' | 'Approved' | 'Rejected' | 'MergedAsRecord'; authoritative: boolean; kind: string; title: string; statement: string;
+  sourceLocator: string; excerptHash: string; extractionMethod: string; confidence: number; suggestedOwner?: string;
+  scopeHints: Record<string, string[]>; owners: string[]; draftRecordPath: string; draftRecord: string;
+  createdAt: string; createdBy: string; decidedAt?: string; decidedBy?: string; decisionComment?: string; mergedRecordId?: string; nextStep: string;
+}
+export const listCandidates = (p: { state?: string; owner?: string; kind?: string } = {}) =>
+  get<{ total: number; items: Candidate[] }>('/v1/candidates', { ...p, take: 100 });
+export const decideCandidate = (id: string, approve: boolean, comment: string) =>
+  post<Candidate>(`/v1/candidates/${encodeURIComponent(id)}/decision`, { approve, comment });

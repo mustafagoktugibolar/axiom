@@ -39,6 +39,9 @@ public sealed partial class SemanticAnalyzer(IOptions<SemanticOptions> options, 
 
     public const int MaxMessageChars = 600;
 
+    /// <summary>Message prefix of an unrecorded-decision finding; the model's explanation follows it.</summary>
+    public const string UnrecordedMessagePrefix = "The change may introduce an architectural decision that no applicable record covers: ";
+
     private readonly SemanticOptions _options = options.Value;
 
     /// <summary>Identifies the analysis configuration so a change of provider, model or thresholds yields a new evaluation.</summary>
@@ -238,7 +241,7 @@ public sealed partial class SemanticAnalyzer(IOptions<SemanticOptions> options, 
             Code = SemanticFindingCodes.For(item.Kind),
             Severity = Band(item.Confidence),
             Source = FindingSource.Semantic,
-            Message = Sanitize($"The change may introduce an architectural decision that no applicable record covers: {item.Explanation}"),
+            Message = Sanitize(UnrecordedMessagePrefix + item.Explanation),
             GovernanceIds = related is null ? [] : [related.Record.Id],
             Evidence = [.. evidence],
             RecommendedAction = "Record this choice as a decision (a short ADR in the governance repository) or point to the existing record that covers it, so the next change in this scope can be checked against it. This is a model suggestion: if it is wrong, overturn the finding in the review.",
@@ -301,7 +304,7 @@ public sealed partial class SemanticAnalyzer(IOptions<SemanticOptions> options, 
         new(new SemanticCoverage(status, reason, provider?.Name, provider?.Model), []);
 
     /// <summary>Model text becomes part of a stored, displayed finding: bound it and strip control characters.</summary>
-    private static string Sanitize(string text)
+    internal static string Sanitize(string text)
     {
         var cleaned = new string([.. text.Select(c => char.IsControl(c) ? ' ' : c)]);
         return cleaned.Length <= MaxMessageChars ? cleaned : cleaned[..MaxMessageChars] + "…";

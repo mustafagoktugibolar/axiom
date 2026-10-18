@@ -138,7 +138,7 @@ public sealed class EfCandidateStore(AxiomDbContext db, IEventOutbox outbox) : I
         }
 
         var total = await rows.CountAsync(cancellationToken);
-        var page = await rows.OrderByDescending(c => c.CreatedAt).ThenBy(c => c.Id).Skip(query.Skip).Take(query.Take).ToListAsync(cancellationToken);
+        var page = await rows.OrderBy(c => c.State == "Proposed" ? 0 : 1).ThenByDescending(c => c.CreatedAt).ThenBy(c => c.Id).Skip(query.Skip).Take(query.Take).ToListAsync(cancellationToken);
         return ([.. page.Select(ToDomain)], total);
     }
 

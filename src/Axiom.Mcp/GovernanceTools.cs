@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Text.Json;
+using Axiom.Application.Candidates;
 using Axiom.Application.Common;
 using Axiom.Application.Evaluation;
 using Axiom.Application.Exceptions;
@@ -40,6 +41,7 @@ public sealed class GovernanceTools(
     ReceiptService receipts,
     FindingExplanationService explanations,
     ExceptionRequestService exceptions,
+    CandidateService candidates,
     ILogger<GovernanceTools> logger)
 {
     [McpServerTool(Name = "governance.preflight_change", Title = "Preflight a change", ReadOnly = false, Idempotent = true, OpenWorld = false)]
@@ -224,6 +226,27 @@ public sealed class GovernanceTools(
         [Description("Exception request ID returned by governance.request_exception.")] string id,
         CancellationToken cancellationToken = default) =>
         McpErrors.RunAsync(logger, "get_exception_request", () => exceptions.GetAsync(principal, id, cancellationToken));
+
+    [McpServerTool(Name = "governance.propose_decision", Title = "Propose a decision", ReadOnly = false, Idempotent = true, OpenWorld = false)]
+    [Description("Proposes a decision, standard, principle or goal you found missing from governance. This creates a candidate for human review; it is never authoritative "
+        + "and never changes any evaluation. An owner approves or rejects it, then commits the draft record to the governance repository. Provide where the knowledge comes from as evidenceLocator.")]
+    public Task<CandidateDto> ProposeDecision(
+        [Description("Short title, 3 to 200 characters.")] string title,
+        [Description("The normative statement, for example 'Services must use PostgreSQL.' At most 2000 characters.")] string statement,
+        [Description("Where this comes from: a file, document, PR, thread or URL, for example 'gateway:docs/adr/0007.md@abc123'.")] string evidenceLocator,
+        [Description("Context and reasoning, Markdown, at most 8000 characters.")] string? rationale = null,
+        [Description("Team that should decide it. Omit if unknown; it is then routed to a decision owner.")] string? suggestedOwner = null,
+        [Description("decision (default), standard, principle or goal.")] string? kind = null,
+        [Description("Proposed scope by dimension, for example {\"repositories\":[\"gateway\"]}.")] Dictionary<string, string[]>? scope = null,
+        CancellationToken cancellationToken = default) =>
+        McpErrors.RunAsync(logger, "propose_decision", async () =>
+        {
+            var result = await candidates.ProposeAsync(
+                principal,
+                new AgentProposalInput(title, statement, rationale, evidenceLocator, suggestedOwner, kind is null ? null : ParseEnum<RecordKind>(kind, "kind"), scope),
+                cancellationToken);
+            return CandidateService.ToDto(result.Candidate);
+        });
 
     private static T ParseEnum<T>(string value, string name)
         where T : struct, Enum =>

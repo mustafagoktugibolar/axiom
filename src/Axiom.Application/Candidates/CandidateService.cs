@@ -9,14 +9,20 @@ namespace Axiom.Application.Candidates;
 /// <summary>
 /// Intake and read side of the knowledge-onboarding candidates (R17). A candidate carries evidence, is routed to
 /// a suggested owner and renders as a draft record, but it never governs: nothing here feeds resolution or
-/// evaluation, and Axiom does not write to the governance repository (ADR-0001). Approval and rejection are a
-/// later workflow; the states and the store are ready for it.
+/// evaluation, and Axiom does not write to the governance repository (ADR-0001). Approval and rejection are decided once by
+/// a human owner (see DecideAsync); approving changes nothing in evaluation.
 /// </summary>
 public sealed class CandidateService(ICandidateStore store, TimeProvider time)
 {
     public const int MaxBatch = 500;
     public const int MaxScopeValues = 50;
     public const int MaxPageSize = 200;
+    public const int MinimumCommentLength = 10;
+    public const string AgentProposalMethod = "agent-proposal";
+    public const int MaxAgentStatementLength = 2_000;
+    public const int MaxAgentRationaleLength = 8_000;
+    public const int MaxAgentScopeValues = 20;
+    public const double AgentProposalConfidence = 0.5;
 
     public const string NextStepProposed =
         "Proposed. This candidate does not govern. A human owner reviews it, then commits the draft record to the governance repository and merges it as accepted.";
@@ -28,11 +34,28 @@ public sealed class CandidateService(ICandidateStore store, TimeProvider time)
     /// Stores candidates generated from an external source. Idempotent by excerpt: knowledge already captured
     /// is reported as existing and left untouched, whatever state it has reached.
     /// </summary>
-    public async Task<CandidateIngestResult> IngestAsync(AxiomPrincipal principal, IReadOnlyCollection<CandidateInput> inputs, CancellationToken cancellationToken)
+    public Task<CandidateIngestResult> IngestAsync(AxiomPrincipal principal, IReadOnlyCollection<CandidateInput> inputs, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(principal);
-        ArgumentNullException.ThrowIfNull(inputs);
         Authorizer.Demand(principal, AccessRight.ManageGovernanceSource);
+        return IngestCoreAsync(principal, inputs, cancellationToken);
+    }
+
+    /// <summary>
+    /// Task 7.8: intake for candidates the platform itself derives while serving an evaluation. The caller was
+    /// already authorized to evaluate; the result is a proposed, non-authoritative candidate, so the weaker
+    /// right suffices. Same validation and idempotency as <see cref="IngestAsync"/>.
+    /// </summary>
+    public Task<CandidateIngestResult> IngestExtractedAsync(AxiomPrincipal principal, IReadOnlyCollection<CandidateInput> inputs, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        Authorizer.Demand(principal, AccessRight.Evaluate);
+        return IngestCoreAsync(principal, inputs, cancellationToken);
+    }
+
+    private async Task<CandidateIngestResult> IngestCoreAsync(AxiomPrincipal principal, IReadOnlyCollection<CandidateInput> inputs, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(inputs);
         if (inputs.Count > MaxBatch)
         {
             throw AxiomException.Invalid($"At most {MaxBatch} candidates may be submitted at once.");
@@ -65,6 +88,110 @@ public sealed class CandidateService(ICandidateStore store, TimeProvider time)
         }
 
         return new CandidateIngestResult(created.Count, existing.Count, created.ToImmutable(), existing.ToImmutable());
+    }
+
+    /// <summary>
+    /// An agent (or contributor) proposes a decision. It becomes a Proposed, never-authoritative candidate with
+    /// extraction method <see cref="AgentProposalMethod"/>, vetted by the same validator as imported candidates.
+    /// Inputs are tighter than for imports because the caller is untrusted.
+    /// </summary>
+    public async Task<CandidateAddResult> ProposeAsync(AxiomPrincipal principal, AgentProposalInput input, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(input);
+        Authorizer.Demand(principal, AccessRight.ProposeDecision);
+
+        var locator = RequestLimits.Identifier(input.EvidenceLocator, "evidenceLocator");
+        var statement = RequestLimits.Text(input.Statement, "statement", MaxAgentStatementLength)?.Trim();
+        var rationale = RequestLimits.Text(input.Rationale, "rationale", MaxAgentRationaleLength)?.Trim() ?? string.Empty;
+        foreach (var (key, values) in input.ScopeHints ?? new Dictionary<string, string[]>())
+        {
+            if ((values?.Length ?? 0) > MaxAgentScopeValues)
+            {
+                throw AxiomException.Invalid($"Scope hint '{key}' may have at most {MaxAgentScopeValues} values.");
+            }
+        }
+
+        // The excerpt hash is derived, not agent-supplied: the same proposal from the same evidence is a no-op.
+        var hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes($"axiom-agent-proposal-v1\n{locator}\n{statement}")));
+        var now = time.GetUtcNow();
+        var candidate = Build(
+            principal,
+            new CandidateInput(locator, hash, AgentProposalMethod, AgentProposalConfidence, input.SuggestedOwner, input.Kind ?? RecordKind.Decision, input.Title, statement, rationale, input.ScopeHints),
+            now);
+        var data = new
+        {
+            candidateId = candidate.Id,
+            kind = candidate.Draft.Kind.ToString(),
+            title = candidate.Draft.Title,
+            source = candidate.Evidence.SourceLocator,
+            suggestedOwner = candidate.Evidence.SuggestedOwner,
+            proposedBy = principal.Subject,
+        };
+        return await store.AddAsync(candidate, [IntegrationEvent.Create(EventTypes.CandidateDecisionCreated, principal.OrganizationId, now, candidate.Id, data)], cancellationToken);
+    }
+
+    /// <summary>
+    /// Approves or rejects a Proposed candidate, once. Allowed for approvers of the suggested owner team, DecisionOwner
+    /// and PlatformAdmin; never for the subject that proposed it. A comment is required. Approving changes nothing in
+    /// evaluation: only the record merged into the governance repository governs. The decision is written once (the state
+    /// is the concurrency token) and appended to the outbox as a <c>candidate.decided</c> event.
+    /// </summary>
+    public async Task<CandidateDto> DecideAsync(AxiomPrincipal principal, string candidateId, bool approve, string? comment, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        Authorizer.Demand(principal, AccessRight.ReadGovernance);
+        var candidate = await store.FindAsync(principal.OrganizationId, RequestLimits.Identifier(candidateId, "id"), cancellationToken)
+            ?? throw AxiomException.NotFound($"Candidate '{candidateId}'");
+
+        if (!CanDecide(principal, candidate))
+        {
+            throw AxiomException.Forbidden(string.IsNullOrWhiteSpace(candidate.Evidence.SuggestedOwner)
+                ? "This candidate has no suggested owner; only a DecisionOwner or PlatformAdmin may decide it."
+                : $"This candidate is routed to '{candidate.Evidence.SuggestedOwner}'; only its approvers, a DecisionOwner or a PlatformAdmin may decide it.");
+        }
+
+        if (string.Equals(principal.Subject, candidate.CreatedBy, StringComparison.Ordinal))
+        {
+            throw AxiomException.Forbidden("The party that proposed a candidate cannot decide it.");
+        }
+
+        if (candidate.State != CandidateState.Proposed)
+        {
+            throw new AxiomException(ErrorKind.Conflict, ErrorCodes.Conflict, "This candidate has already been decided.");
+        }
+
+        var text = RequestLimits.Text(comment, "comment", 4_000)?.Trim() ?? string.Empty;
+        if (text.Length < MinimumCommentLength)
+        {
+            throw AxiomException.Invalid($"A decision needs a comment of at least {MinimumCommentLength} characters.");
+        }
+
+        var now = time.GetUtcNow();
+        var decided = approve ? candidate.Approve(principal.Subject, text, now) : candidate.Reject(principal.Subject, text, now);
+        var data = new { candidateId = candidate.Id, approved = approve, decidedBy = principal.Subject, suggestedOwner = candidate.Evidence.SuggestedOwner };
+        var recorded = await store.UpdateAsync(
+            decided, CandidateState.Proposed, [IntegrationEvent.Create(EventTypes.CandidateDecided, candidate.OrganizationId, now, candidate.Id, data)], cancellationToken);
+        return recorded
+            ? ToDto(decided)
+            : throw new AxiomException(ErrorKind.Conflict, ErrorCodes.Conflict, "This candidate has already been decided.");
+    }
+
+    /// <summary>Whether the principal may decide the candidate. Does not consider self-approval.</summary>
+    public static bool CanDecide(AxiomPrincipal principal, Candidate candidate)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(candidate);
+        if (principal.IsInRole(Role.DecisionOwner) || principal.IsInRole(Role.PlatformAdmin))
+        {
+            return true;
+        }
+
+        var owner = candidate.Evidence.SuggestedOwner;
+        return !string.IsNullOrWhiteSpace(owner)
+            && principal.IsInRole(Role.Approver)
+            && principal.Teams.Contains(owner, StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task<CandidateDto> GetAsync(AxiomPrincipal principal, string candidateId, CancellationToken cancellationToken)

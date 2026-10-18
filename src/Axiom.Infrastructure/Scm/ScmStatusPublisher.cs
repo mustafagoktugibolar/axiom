@@ -148,7 +148,7 @@ public sealed class ScmStatusPublisher(ISystemGraph graph, IOptionsMonitor<ScmOp
         return request;
     }
 
-    private static bool TryApiBase(string? configured, string host, out Uri api)
+    internal static bool TryApiBase(string? configured, string host, out Uri api)
     {
         var text = string.IsNullOrWhiteSpace(configured) ? "https://api.github.com" : configured.Trim();
         if (!text.EndsWith('/'))
