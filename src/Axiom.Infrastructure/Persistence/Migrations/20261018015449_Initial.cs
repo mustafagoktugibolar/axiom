@@ -20,6 +20,25 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                 .Annotation("Npgsql:PostgresExtension:vector", ",,");
 
             migrationBuilder.CreateTable(
+                name: "candidate",
+                schema: "axiom",
+                columns: table => new
+                {
+                    organization_id = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    id = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    excerpt_hash = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    kind = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    suggested_owner = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    state = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    document = table.Column<string>(type: "jsonb", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_candidate", x => new { x.organization_id, x.id });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "catalog_state",
                 schema: "axiom",
                 columns: table => new
@@ -292,7 +311,11 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                     traceparent = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
                     data = table.Column<string>(type: "jsonb", nullable: false),
                     dispatched_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    attempts = table.Column<int>(type: "integer", nullable: false)
+                    attempts = table.Column<int>(type: "integer", nullable: false),
+                    next_attempt_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    locked_until = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    dead_lettered_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    last_error = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -478,6 +501,19 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "ix_candidate_state",
+                schema: "axiom",
+                table: "candidate",
+                columns: new[] { "organization_id", "state", "created_at" });
+
+            migrationBuilder.CreateIndex(
+                name: "ux_candidate_excerpt",
+                schema: "axiom",
+                table: "candidate",
+                columns: new[] { "organization_id", "excerpt_hash" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_evaluation_commit",
                 schema: "axiom",
                 table: "evaluation",
@@ -571,7 +607,7 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                 schema: "axiom",
                 table: "outbox_event",
                 column: "occurred_at",
-                filter: "dispatched_at IS NULL");
+                filter: "dispatched_at IS NULL AND dead_lettered_at IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "ix_receipt_commit",
@@ -658,6 +694,10 @@ namespace Axiom.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "candidate",
+                schema: "axiom");
+
             migrationBuilder.DropTable(
                 name: "catalog_state",
                 schema: "axiom");

@@ -26,6 +26,64 @@ namespace Axiom.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Axiom.Infrastructure.Audit.CandidateRow", b =>
+                {
+                    b.Property<string>("OrganizationId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Document")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("document");
+
+                    b.Property<string>("ExcerptHash")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("excerpt_hash");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("State")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("state");
+
+                    b.Property<string>("SuggestedOwner")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("suggested_owner");
+
+                    b.HasKey("OrganizationId", "Id");
+
+                    b.HasIndex("OrganizationId", "ExcerptHash")
+                        .IsUnique()
+                        .HasDatabaseName("ux_candidate_excerpt");
+
+                    b.HasIndex("OrganizationId", "State", "CreatedAt")
+                        .HasDatabaseName("ix_candidate_state");
+
+                    b.ToTable("candidate", "axiom");
+                });
+
             modelBuilder.Entity("Axiom.Infrastructure.Audit.EvaluationAppliedRecordRow", b =>
                 {
                     b.Property<string>("OrganizationId")
@@ -1334,6 +1392,10 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("data");
 
+                    b.Property<DateTimeOffset?>("DeadLetteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dead_lettered_at");
+
                     b.Property<DateTimeOffset?>("DispatchedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("dispatched_at");
@@ -1343,6 +1405,19 @@ namespace Axiom.Infrastructure.Persistence.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("event_type");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTimeOffset?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_until");
+
+                    b.Property<DateTimeOffset?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
 
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone")
@@ -1363,7 +1438,7 @@ namespace Axiom.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OccurredAt")
                         .HasDatabaseName("ix_outbox_event_pending")
-                        .HasFilter("dispatched_at IS NULL");
+                        .HasFilter("dispatched_at IS NULL AND dead_lettered_at IS NULL");
 
                     b.ToTable("outbox_event", "axiom");
                 });
