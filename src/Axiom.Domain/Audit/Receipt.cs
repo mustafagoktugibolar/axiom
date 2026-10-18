@@ -93,7 +93,7 @@ public static class ReceiptFactory
                 && Same(root, "organizationId", receipt.OrganizationId)
                 && Same(root, "stage", receipt.Stage.ToString())
                 && Same(root, "verdict", VerdictLattice.ToContract(receipt.Verdict))
-                && Same(root, "createdAt", receipt.IssuedAt.ToUniversalTime().ToString("O"))
+                && SameInstant(root.GetProperty("createdAt").GetString(), receipt.IssuedAt)
                 && Same(scm, "repository", receipt.Repository)
                 && Same(scm, "commitSha", receipt.CommitSha)
                 && Same(root.GetProperty("governance"), "snapshotId", receipt.SnapshotId);
@@ -103,6 +103,11 @@ public static class ReceiptFactory
             return false;
         }
     }
+
+    // The payload keeps 100 ns ticks, PostgreSQL timestamptz keeps microseconds: compare at the coarser precision.
+    private static bool SameInstant(string? payloadValue, DateTimeOffset column) =>
+        DateTimeOffset.TryParse(payloadValue, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var signed)
+        && signed.UtcTicks / 10 == column.UtcTicks / 10;
 
     private static bool Same(JsonElement element, string name, string? expected) =>
         string.Equals(element.GetProperty(name).GetString(), expected, StringComparison.Ordinal);

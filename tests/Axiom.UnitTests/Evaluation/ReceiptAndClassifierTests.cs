@@ -39,6 +39,18 @@ public class ReceiptAndClassifierTests
     };
 
     [Fact]
+    public void Receipt_still_verifies_when_the_issue_time_comes_back_at_microsecond_precision()
+    {
+        var receipt = ReceiptFactory.Create(Evaluation() with { CreatedAt = new DateTimeOffset(2026, 10, 18, 9, 0, 0, TimeSpan.Zero).AddTicks(1234567) }, ReceiptFactory.GenesisDigest);
+
+        // PostgreSQL timestamptz keeps microseconds; the payload keeps 100 ns ticks.
+        var stored = receipt with { IssuedAt = receipt.IssuedAt.AddTicks(-(receipt.IssuedAt.Ticks % 10)) };
+
+        Assert.True(ReceiptFactory.Verify(stored));
+        Assert.False(ReceiptFactory.Verify(stored with { IssuedAt = stored.IssuedAt.AddSeconds(1) }));
+    }
+
+    [Fact]
     public void Receipt_is_content_addressed_and_verifiable()
     {
         var receipt = ReceiptFactory.Create(Evaluation(), ReceiptFactory.GenesisDigest);
