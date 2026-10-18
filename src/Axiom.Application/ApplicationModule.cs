@@ -32,6 +32,7 @@ public static class ApplicationModule
         services.AddScoped<SemanticCandidateExtractor>();
         services.AddOptions<CandidateClusteringOptions>();
         services.AddScoped<CandidateClusteringService>();
+        services.AddScoped<CandidateMergeReconciler>();
         services.AddScoped<AdrImportService>();
         services.AddScoped<GovernanceCoverageService>();
         services.AddScoped<GovernanceReadService>();

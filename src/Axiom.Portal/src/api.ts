@@ -202,3 +202,15 @@ export interface SemanticMetrics {
   truncated: boolean;
 }
 export const getSemanticMetrics = () => get<SemanticMetrics>('/v1/semantic/metrics');
+
+// ---- candidates (never authoritative; only the merged record governs) ----
+export interface Candidate {
+  id: string; state: 'Proposed' | 'Approved' | 'Rejected' | 'MergedAsRecord'; authoritative: boolean; kind: string; title: string; statement: string;
+  sourceLocator: string; excerptHash: string; extractionMethod: string; confidence: number; suggestedOwner?: string;
+  scopeHints: Record<string, string[]>; owners: string[]; draftRecordPath: string; draftRecord: string;
+  createdAt: string; createdBy: string; decidedAt?: string; decidedBy?: string; decisionComment?: string; mergedRecordId?: string; nextStep: string;
+}
+export const listCandidates = (p: { state?: string; owner?: string; kind?: string } = {}) =>
+  get<{ total: number; items: Candidate[] }>('/v1/candidates', { ...p, take: 100 });
+export const decideCandidate = (id: string, approve: boolean, comment: string) =>
+  post<Candidate>(`/v1/candidates/${encodeURIComponent(id)}/decision`, { approve, comment });

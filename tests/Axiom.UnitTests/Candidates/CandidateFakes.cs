@@ -48,7 +48,7 @@ internal sealed class InMemoryCandidateStore : ICandidateStore
             && (query.State is null || c.State == query.State)
             && (query.Kind is null || c.Draft.Kind == query.Kind)
             && (query.Owner is null || c.Evidence.SuggestedOwner == query.Owner))
-            .OrderByDescending(c => c.CreatedAt).ThenBy(c => c.Id, StringComparer.Ordinal).ToList();
+            .OrderBy(c => c.State == CandidateState.Proposed ? 0 : 1).ThenByDescending(c => c.CreatedAt).ThenBy(c => c.Id, StringComparer.Ordinal).ToList();
         return Task.FromResult((rows.Skip(query.Skip).Take(query.Take).ToImmutableArray(), rows.Count));
     }
 }

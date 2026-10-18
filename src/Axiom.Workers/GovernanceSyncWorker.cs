@@ -1,3 +1,4 @@
+using Axiom.Application.Candidates;
 using Axiom.Application.Governance;
 using Microsoft.Extensions.Options;
 
@@ -122,6 +123,17 @@ public sealed partial class GovernanceSyncWorker(
                     default:
                         break;
                 }
+
+                // Approved candidates become MergedAsRecord once the published snapshot holds the record they turned into.
+                if (result.Outcome != SyncOutcome.Rejected
+                    && scope.ServiceProvider.GetService<CandidateMergeReconciler>() is { } reconciler)
+                {
+                    var merged = await reconciler.ReconcileAsync(source.OrganizationId, cancellationToken);
+                    if (merged.Count > 0)
+                    {
+                        LogCandidatesMerged(source.OrganizationId, merged.Count);
+                    }
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -134,6 +146,9 @@ public sealed partial class GovernanceSyncWorker(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Database schema is not ready (migrations pending or database unreachable); governance sync waits.")]
     private partial void LogWaitingForSchema();
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{Count} approved candidate(s) for {Organization} are now merged as governance records.")]
+    private partial void LogCandidatesMerged(string organization, int count);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Governance sync is disabled.")]
     private partial void LogDisabled();
