@@ -5,6 +5,7 @@ using System.Text;
 using Axiom.Domain.Evaluation;
 using Axiom.Domain.Governance;
 using Axiom.Domain.Policy;
+using Axiom.Domain.Policy.Custom;
 using Axiom.Domain.Resolution;
 
 namespace Axiom.Application.Policy;
@@ -190,6 +191,11 @@ public sealed class PolicyEngine
         catch (PolicyParameterException ex)
         {
             return Result(PolicyOutcome.Error, [], ex.Message);
+        }
+        catch (PolicyRuleExecutionException ex)
+        {
+            // A custom rule that hit a runner limit or crashed: only its stable reason code is recorded.
+            return Result(PolicyOutcome.Error, [], $"Rule '{binding.RuleId}' failed with {ex.Code}.");
         }
 #pragma warning disable CA1031 // A failing rule must be isolated and reported as an error; it must not stop the other rules.
         catch (Exception ex)
