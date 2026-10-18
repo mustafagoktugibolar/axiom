@@ -9,12 +9,13 @@ import Reviews from './views/Reviews.vue';
 import Exceptions from './views/Exceptions.vue';
 import Graph from './views/Graph.vue';
 import DecisionGraph from './views/DecisionGraph.vue';
+import Health from './views/Health.vue';
 import Setup from './views/Setup.vue';
 
-type View = 'start' | 'explorer' | 'evaluations' | 'reviews' | 'exceptions' | 'graph' | 'decisions' | 'setup';
+type View = 'start' | 'explorer' | 'evaluations' | 'reviews' | 'exceptions' | 'graph' | 'decisions' | 'health' | 'setup';
 const tabs: { id: View; label: string }[] = [
   { id: 'start', label: 'Get started' }, { id: 'explorer', label: 'Governance' }, { id: 'evaluations', label: 'Evaluations' },
-  { id: 'reviews', label: 'Review queue' }, { id: 'exceptions', label: 'Exceptions' }, { id: 'graph', label: 'System graph' }, { id: 'decisions', label: 'Decisions graph' }, { id: 'setup', label: 'Set up' },
+  { id: 'reviews', label: 'Review queue' }, { id: 'exceptions', label: 'Exceptions' }, { id: 'graph', label: 'System graph' }, { id: 'decisions', label: 'Decisions graph' }, { id: 'health', label: 'Governance health' }, { id: 'setup', label: 'Set up' },
 ];
 const view = ref<View>('start');
 const selectedRecord = ref<string | null>(null);
@@ -73,6 +74,7 @@ function logout() { signOut(); signedIn.value = false; go('start'); }
     <Exceptions v-else-if="view === 'exceptions'" />
     <Graph v-else-if="view === 'graph'" />
     <DecisionGraph v-else-if="view === 'decisions'" @open="openRecord" />
+    <Health v-else-if="view === 'health'" @open="openRecord" @open-exceptions="go('exceptions')" />
     <Setup v-else />
   </main>
 </template>
