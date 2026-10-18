@@ -29,6 +29,9 @@ public static class ApplicationModule
         services.AddScoped<PullRequestStatusReporter>();
         services.AddScoped<ExceptionRequestService>();
         services.AddScoped<CandidateService>();
+        services.AddScoped<SemanticCandidateExtractor>();
+        services.AddOptions<CandidateClusteringOptions>();
+        services.AddScoped<CandidateClusteringService>();
         services.AddScoped<AdrImportService>();
         services.AddScoped<GovernanceCoverageService>();
         services.AddScoped<GovernanceReadService>();
